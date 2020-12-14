@@ -716,274 +716,69 @@ def TransposeCSV(fpath, spath):
 if __name__ == "__main__":
     print('以下为程序打印所有内容：')
     print('程序开始运行时间', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
-    fpath = r'D:\PycharmProjects\data_preprocessing\CK_handle\aeeem_experiment\compareresults\20190711results\t'
-    spath = r'D:\PycharmProjects\data_preprocessing\CK_handle\aeeem_experiment\compareresults\20190711results\t_after'
-    # TransposeCSV(fpath, spath)
+    pwd = os.getcwd()
+    print(pwd)
+    father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + ".")
+    # print(father_path)
+    fpath = father_path + '/dataset-inOne/'
+    spath = father_path + '/results/'
+     # TransposeCSV(fpath, spath)
 
     starttime = time.clock()  # 计时开始
-    fp = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\paremeters_mean\r=250\all'
-    # df = pd.read_csv(fp + '\\' + 'Results_TiFF_50_0.02_NB.csv')
-    # print(len(df))
-    # Checktestfile(r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\paremeters_mean\r=41，n=256')
-    # sp1 = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\paremeters_mean\r=41，n=256'
-    # sp2 = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\paremeters_mean\r=250\256'
-    # Concattwofiles(sp1, sp2, fp)
 
-    sp3 = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\paremeters_mean\r30\r=30, n=256'
-    sp4 = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\paremeters_mean\r=250\256'
-    spath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\paremeters_mean\r=250\mean'
-    f = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\parameters_discussions\n=256'
-    # fl = os.listdir(f)
-    # print(fl)
-    # list = ['0.001', '0.01', '0.1', '0.02', '0.2', '0.03',
-    #         '0.04', '0.005', '0.05', '0.5', '0.06', '0.07']
-    # l = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\parameters_discussions'
-    # for i in range(len(fl)):
-    #     s = f + '\\' + fl[i]
     #     Concatfiles(s, 'Results_TiFF_256_' + list[i] + '_NB.csv', l)
-    # num = [2, 5, 10, 15, 20, 25, 30, 50, 100, 150, 200, 250]
-    # for n in num:
+
     #     MeanMoreValuesofOneColumn(fp, 'runtimes', n, spath)
-    spath2 = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\paremeters_mean\r=250\handle'
     # SplitOneColumn(spath, 2, 3, spath2)
-    mean = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\paremeters_mean\r=250\mean_handle'
-    cpath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\paremeters_mean\r=250'
-    # Concatfiles(mean, 'all_para_result.csv', cpath)
+   # Concatfiles(mean, 'all_para_result.csv', cpath)
 
-    # ae0 = r'D:\PycharmProjects\data_preprocessing\20190717\rank_instance_release_AEEEM'
-    # ck0 = r'D:\PycharmProjects\data_preprocessing\20190717\rank_instance_release_CK\rank_15datasets'
-    # ae1 = r'D:\PycharmProjects\data_preprocessing\20190717\rank_instance_release_CK\rank_release'
-    # ckae = r'D:\PycharmProjects\data_preprocessing\20190717\rank_20datasets'
-    ae0 = r'D:\PycharmProjects\data_preprocessing\20190717\Mean_eachtestfile_AEEEM'
-    ck0 = r'D:\PycharmProjects\data_preprocessing\20190717\Mean_eachtestfile_CK\CK_Mean_eachtestfile_15datasets'
-    ae1 = r'D:\PycharmProjects\data_preprocessing\20190717\rank_instance_release_CK\rank_release'
-    ckae = r'D:\PycharmProjects\data_preprocessing\20190717\Mean_eachtestfile_20datasets'
-    # FL = os.listdir(ae1)
-    # for file in FL:
-    #     ae = ae1 + '\\' + file
-    #     RenameFiles(ae, 'HeBurakFilter', 'HBF')
-    #     RenameFiles(ae, 'HeFilter', 'HF')
-    ae = r'D:\PycharmProjects\data_preprocessing\20190717\Mean_eachtestfile_AEEEM'
-    RenameFiles(ae, 'GlobalFilter', 'GF')
-    # RenameFiles(ae, 'HeBurakFilter', 'HBF')
-    # RenameFiles(ae, 'HePeterFilter', 'HPF')
-    # RenameFiles(ae, 'HerboldNNFilter_', 'HNNF_')
-    Concattwofiles(ck0, ae0, ckae)
 
-    # fpath1 = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\tr'
-    # fpath2 = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\te'
-    #
-    # df_dict, Characteristic = DataCharacteristic(fpath2 + '\\' + 'ant-1.3.csv')
-    #
-    # X_tr, y_tr = DataFrame2Array(fpath2 + '\\' + 'ant-1.3.csv')  # y_tr = y_tr.ravel()
-    # X_te, y_te = DataFrame2Array(fpath2 + '\\' + 'arc-1.csv')
-    # X_mtr, y_mtr = DataFrame2Array(fpath1 + '\\' + 'exp_ant-1.3.csv')
+    # Concattwofiles(ck0, ae0, ckae)
+
+
     # df = StatisticsCharacteristic(fpath1)
-    #
-    # tefilename = 'ant-1.3.csv'
-    # tefile = fpath2 + '\\' + tefilename
-    # filelist = os.listdir(fpath2)
-    # trfilelist = []
-    # for file in filelist:
-    #     if not file == tefilename:
-    #         trfilelist.append(fpath2 + '\\' + file)
 
     '''检查文件中指定列是否存在空值'''
-    # path = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\More2One\NO_SMOTE'
-    # path = r'D:\PycharmProjects\data_preprocessing\CK_handle\aeeem_experiment\compareresults'
-
-    # path = r'D:\PycharmProjects\data_preprocessing\CK_handle\Relink_csv\compareresults'
-    # path = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\completeresults'
-    # path=r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\completeresults\HeBurakFilter'
-    # path = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\More2One\NO_SMOTE\HeBurak'
-    # CheckNAN('AUC', 'testfile', 2, path)
-
-    # path = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_instance\CK_Mean_eachtef_allf_eachmr\select'
-    #  BurakFilter	GlobalFilter	iForestFilterStr1	iForestFilterStr2	PeterFilter	WPCP
-    # list1 = ['BurakFilter',	'GlobalFilter',	'iForestFilterStr1',
-    #          'iForestFilterStr2', 'PeterFilter', 'WPCP']
-    # for l in list1[1:]:
-    #     CheckNAN(l, 'Unnamed: 0', 3, path)
     # CheckNAN(list1[0], 'Unnamed: 0', 3, path)
 
-    # selectpath = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\CK_Mean_eachtef_allf_eachmr\select'
-    # list2 = ['HeBurakFilter', 'HeFilter', 'HePeterFilter',
-    #          'HerboldNNFilter', 'iForestFilter1Project', 'iForestFilter2Project', 'WPCP']
-    # for l in list2[1:]:
-    #     CheckNAN(l, 'Unnamed: 0', 3, selectpath)
-    # CheckNAN(list2[5], 'Unnamed: 0', 3, selectpath)
+
 
     '''检查重新运行的程序是否正确：以运行列数正确为检查方式'''
-    # path = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\More2One\buchong\replaceresults'
     # Checkrownumbers(path)
 
     '''第一个文件删除与第二个文件相同的列，然后将两个文件合并'''
-    # Relink
-    # fpath1 = r'D:\PycharmProjects\data_preprocessing\CK_handle\Relink_csv\compareresults\iForestFilterStr2'
-    # fpath2 = r'D:\PycharmProjects\data_preprocessing\CK_handle\Relink_csv\compareresults\replaceresults'
-    # spath = r'D:\PycharmProjects\data_preprocessing\CK_handle\Relink_csv\compareresults\concatresults'
-
-    # AEEEM
-    # fpath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\Duptotaldata'
-    # spath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults'
-
-    # # CK
-    # fpath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\More2One\NO_SMOTE'
-    # fl = os.listdir(fpath)
-    # usefulf = []
-    # for fp in fl:
-    #     if fp not in ['readme.txt']:
-    #         usefulf.append(fp)
-    # fpath2 = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\More2One\buchong\replaceresults'
-    # spath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\More2One\buchong\concatresults'
-    # for f in usefulf:
-    #     fpath1 = fpath + '\\' + f
-    #     InsertRepalceValues(fpath1, fpath2, spath)
-    #
-    # f1 = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\More2One\buchong\1'
-    # f2 = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\More2One\buchong\2'
-    # spath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\More2One\buchong\concatresults'
-    # InsertRepalceValues(f1, f2, spath)
+   # InsertRepalceValues(f1, f2, spath)
 
     '''检查删除行是否成功！'''
-    # fpath1 = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\More2One\buchong\question'
-    # fpath2 = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\More2One\buchong\replaceresults'
-    # DelNanValues(fpath1, fpath2)
+     # DelNanValues(fpath1, fpath2)
 
     '''SumTime(path)'''
-    # timepath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\filtertime'
-    # sp = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results'
     # SumTime(timepath, 14, sp)
 
     '''按列名排序'''
-    # path = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\completeresults\BurakFilter'
-    # spath = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\completeresults\SortBF'
-
-    # path = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\completeresults\PeterFilter'
-    # spath = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\completeresults\SortPDF'
-    # SortColumns(path, spath)
+   # SortColumns(path, spath)
 
     '''替换某行'''
-    # spath0 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\completeresults\RepBF'
-    # tpath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\BurakFiltertime.csv'
-    # tpath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\PeterFiltertime.csv''
-    # spath0 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\completeresults\RepPDF'
     # ReplaceColumns(spath, tpath, spath0)
 
     '''合并文件'''
-    fpath = r'D:\PycharmProjects\data_preprocessing\CK_handle\Relink_csv'
-    spath = r'D:\PycharmProjects\data_preprocessing\CK_handle\Relink_csv'
     # Concattrainfiles(fpath, 'exp_', spath)
-    # fpath = r'D:\PycharmProjects\data_preprocessing\CK_handle\aeeem_experiment\Duptotaldata'
-    # spath = r'D:\PycharmProjects\data_preprocessing\CK_handle\aeeem_experiment\ConDtdata'
-    # Concattrainfiles(fpath, 'exp_', spath)
-
-    f1 = r'D:\PycharmProjects\data_preprocessing\CK_handle\HeBurakFilter\1\13datasets'
-    f2 = r'D:\PycharmProjects\data_preprocessing\CK_handle\HeBurakFilter\2'
-    # Concatfiles(f1, 'Results_HeBurakFilter.csv',  f2)
+   # Concatfiles(f1, 'Results_HeBurakFilter.csv',  f2)
     f3 = r'D:\PycharmProjects\data_preprocessing\CK_handle\HeBurakFilter\rank'
     # SortColumns(f2, f3)
-    f4 = r'D:\PycharmProjects\data_preprocessing\CK_handle\HeBurakFilter\time'
-    f5 = r'D:\PycharmProjects\data_preprocessing\CK_handle\HeBurakFilter\sum_time'
     # SumTime(f4, 3, f5)
-    f6 = r'D:\PycharmProjects\data_preprocessing\CK_handle\HeBurakFilter\rank_and_time'
     # ReplaceColumns(f3, f5, f6)
 
-    path = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\CK_Mean_eachtef_allf_eachmr\select'
-    spath = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\CK_Mean_eachtef_allf_eachmr\select_rep'
-    # ReplaceColumns2(path, 'HePeterFilter', spath)
-
-    fpath = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\CK_Mean_eachtef_allf_eachmr'
-    f7 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\CK_Mean_eachtef_allf_eachmr'
-    # RankValues(fpath+'\\' + 'AUC', 'AUC', int(7), f7)  # 7种对比方法
-    # RankValues(fpath + '\\' + 'Balance', 'Balance', int(7), f7)
-    # RankValues(fpath + '\\' + 'G-Mean', 'GMean', int(7), f7)
-    # RankValues(fpath + '\\' + 'G-Measure', 'GMeasure', int(7),  f7)
+   # RankValues(fpath + '\\' + 'G-Measure', 'GMeasure', int(7),  f7)
 
     '''检查目标集的数量和文件中数据的条数'''
-    p1 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\20190708\mean_release\rank_release _'
-    p2 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\20190708\mean_instance\rank_instance_'
-    # Checktestfile(p1)
     # Checktestfile(p2)
 
-    # CheckNAN('AUC',  'Unnamed: 0', 3, p2)
-    # CheckNAN('AUC', 'testfile', 3, p1)
-    # CheckNAN('MCC', 'testfile', 3, p2)
-    # CheckNAN('MCC', 'testfile: 0', 3, p1)
-    valueslist = ['ant-1.3.csv', 'camel-1.0.csv', 'e-learning-1.csv', 'prop-6.csv', 'redaktor-1.csv']
-    fp1 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\RULiF'
-    SP1 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\RULiF_HPF'
-    # DelSomeRowValues(fp1, valueslist, SP1)
-
-    # fp2 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\rank_release_except_HPF_pdvalues\d_release_file\nb\RLiF'
-    # SP2 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\rank_release_except_HPF_pdvalues\d_release_file\nb'
-    # Concatfiles(fp2, 'dvalues_release_RLiFFilter_NB.csv', SP2)
-    # fp3 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\rank_release_except_HPF_pdvalues\d_release_file\nb\RUiF'
-    # Concatfiles(fp3, 'dvalues_release_RUiFFilter_NB.csv', SP2)
-    #
-    # fp4 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\rank_release_except_HPF_pdvalues\p_release_file\NB\RUiF'
-    # SP3 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\rank_release_except_HPF_pdvalues\p_release_file\NB'
-    # Concatfiles(fp4, 'pvalues_release_RUiFFilter_NB.csv', SP3)
-    # fp5 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\rank_release_except_HPF_pdvalues\p_release_file\NB\RLiF'
-    # Concatfiles(fp5, 'pvalues_release_RLiFFilter_NB.csv', SP3)
-
-    # fp6 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\RULiF_HPF_pdvalues\d_release_file\NB\RUiF'
-    # SP4 = R'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\RULiF_HPF_pdvalues\d_release_file\NB'
-    # Concatfiles(fp6, 'dvalues_release_RUiFFilter_NB.csv', SP4)
-    # fp7 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\RULiF_HPF_pdvalues\d_release_file\NB\RLiF'
-    # Concatfiles(fp7, 'pdvalues_release_RLiFFilter_NB.csv', SP4)
-    #
-    # fp8 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\RULiF_HPF_pdvalues\p_release_file\NB\RUiF'
-    SP5 = R'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\RULiF_HPF_pdvalues\p_release_file\NB'
-    # Concatfiles(fp8, 'pvalues_release_RUiFFilter_NB.csv', SP5)
-    fp9 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\RULiF_HPF_pdvalues\p_release_file\NB\RLiF'
-    # Concatfiles(fp9, 'pvalues_release_RLiFFilter_NB.csv', SP5)
-    # St = ['DT', 'KNN', 'RF', 'MLP', 'LR', 'NB']
-
-    '''release'''
-    # basepath = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\rank_release_except_HPF_pdvalues'
-    # basepath = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\RULiF_HPF_pdvalues'
-    # for s in strings:
-    #     folderlist = os.listdir(basepath + '\\' + s)
-    #     for folder in folderlist:
-    #         # filelist = os.listdir(basepath + '\\' + s + '\\' + folder)
-    #         # for f in filelist:
-    #         #     Concatfiles(basepath + '\\' + s + '\\' + folder + '\\' + f,  s + '_' + f, basepath)
-    '''instance'''
-    # basepath = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_instance'
-    # # basepath = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_instance\RULiF_HPF_pdvalues'
-    # strings = ['dvalues_tefile', 'pvalues_tefile']
-    # for s in strings:
-    #     folderlist = os.listdir(basepath + '\\' + s)  # IUiF， ILiF
-    #     for folder in folderlist:
-    #         filelist = os.listdir(basepath + '\\' + s + '\\' + folder)  # 分类器
-    #         for f in filelist:
-    #             Concatfiles(basepath + '\\' + s + '\\' + folder + '\\' + f, s + '_' + folder + '_' + f + '.csv',
-    #                         basepath)
-
-    # bp = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\rank_release_except_HPF_pdvalues'
-    bp = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\RULiF_HPF_pdvalues'
-    fpath1 = bp + '/' + 'd_release_classifier'
-    # Concatfiles(fpath1, 'd_release_classifier.csv', bp)
-    fpath2 = bp + '/' + 'p_release_classifier'
-    # Concatfiles(fpath2, 'p_release_classifier.csv', bp)
-    # s1 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\rank_release_except_HPF_pdvalues'
-    # s2 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\RULiF_HPF_pdvalues'
-    # s3 = r'D:\PycharmProjects\data_preprocessing\CK_handle\CK_results\mean_release\six_clf_20190606\pdvalues'
-    # ConcatOneColumn(s1, s2, s3)
-
-    '''参数讨论'''
-    # bpath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\parameters_discussions'
-    # fpl = os.listdir(bpath)
-    # sapath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\paremeters_mean'
-    # for fp in fpl:
-    #     Concatmorefiles(bpath + '\\' + fp, 0, 30, sapath)
+    # CheckNAN('Balance',  'Unnamed: 0', 3, p2)
+   # DelSomeRowValues(fp1, valueslist, SP1)
 
     '''重命名文件'''
-    # oldpath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\1'
-    # fpl = os.listdir(oldpath)
-    # spath = r'D:\PycharmProjects\data_preprocessing\CK_handle\process_results\compareresults\2'
-    # for fp in fpl:
+
     #     RenameFiles(oldpath + '\\' + fp, spath)
 
     endtime = time.clock()  # 计时结束

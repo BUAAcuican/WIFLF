@@ -27,11 +27,13 @@ from collections import Counter
 import pandas as pd
 import heapq
 import numpy as np
-from DataProcessing import DataFrame2Array, DataImbalance, Delete_abnormal_samples, \
-     DevideData2TwoClasses, Drop_Duplicate_Samples, indexofMinMore, indexofMinOne, NumericStringLabel2BinaryLabel, \
-     Process_Data, Random_Stratified_Sample_fraction, Log_transformation
 
 from ClassificationModel import Selection_Classifications, Build_Evaluation_Classification_Model
+
+from DataProcessing import Check_NANvalues, DataFrame2Array, DataImbalance, Delete_abnormal_samples, \
+     DevideData2TwoClasses, Drop_Duplicate_Samples, indexofMinMore, indexofMinOne, NumericStringLabel2BinaryLabel, \
+     Random_Stratified_Sample_fraction, Standard_Features # Process_Data,
+
 
 class Input_Datas(object):
     """
@@ -597,7 +599,6 @@ class IForest(object):
         return alpha, abnormal_list
 
 def WiFF_main(mode, clf_index, runtimes):
-
     pwd = os.getcwd()
     print(pwd)
     father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + ".")
@@ -606,21 +607,28 @@ def WiFF_main(mode, clf_index, runtimes):
     spath = father_path + '/results/'
     if not os.path.exists(spath):
         os.mkdir(spath)
+    # example datasets for test
+    # datasets = [['ant-1.3.csv', 'arc-1.csv', 'camel-1.0.csv'], ['Apache.csv', 'Safe.csv', 'Zxing.csv']]
 
+    # datasets for RQ2
     # datasets = [['ant-1.3.csv', 'arc-1.csv', 'camel-1.0.csv', 'ivy-1.4.csv', 'jedit-3.2.csv', 'log4j-1.0.csv', 'lucene-2.0.csv', 'poi-2.0.csv', 'redaktor-1.csv', 'synapse-1.0.csv', 'tomcat-6.0.389418.csv', 'velocity-1.6.csv', 'xalan-2.4.csv', 'xerces-init.csv'],
     #         ['ant-1.7.csv', 'arc-1.csv', 'camel-1.6.csv', 'ivy-2.0.csv', 'jedit-4.3.csv', 'log4j-1.1.csv', 'lucene-2.0.csv', 'poi-2.0.csv', 'redaktor-1.csv', 'synapse-1.2.csv', 'tomcat-6.0.389418.csv', 'velocity-1.6.csv', 'xalan-2.6.csv', 'xerces-1.3.csv'],
     #         ['EQ.csv', 'JDT.csv', 'LC.csv', 'ML.csv', 'PDE.csv'],
     #         ['Apache.csv', 'Safe.csv', 'Zxing.csv']]
-    datasets = [['ant-1.3.csv', 'arc-1.csv', 'camel-1.0.csv'], ['Apache.csv', 'Safe.csv', 'Zxing.csv']]
+
+    # datasets for parameters discussion
+    datasets = [['arc-1.csv', 'log4j-1.0.csv', 'lucene-2.0.csv', 'synapse-1.0.csv', 'tomcat-6.0.389418.csv']]
+
     datanum = 0
     for i in range(len(datasets)):
         datanum = datanum + len(datasets[i])
     # print(datanum)
     # mode = [preprocess_mode, train_mode, save_file_name]
-    preprocess_mode = mode[0]
+    # preprocess_mode = mode[0]
+    iForest_parameters = mode[0]
     train_mode = mode[1]
     save_file_name = mode[2]
-    iForest_parameters = mode[3]
+
     df_file_measures = pd.DataFrame()  # the measures of all files in all runtimes
     classifiername = []
     # file_list = os.listdir(fpath)
@@ -657,47 +665,65 @@ def WiFF_main(mode, clf_index, runtimes):
                                                        sort=False)
                     # Samples_tr_all.to_csv(f2, index=None, columns=None)  # 将类标签二元化的数据保存，保留列名，不增加行索引
 
-                    # random sample 90% negative samples and 90% positive samples
-                    string = 'bug'
+                    # /* step1: data preprocessing */
                     Sample_tr_pos, Sample_tr_neg, Sample_pos_index, Sample_neg_index \
-                        = Random_Stratified_Sample_fraction(Samples_tr_all, string, r=r)
-                    Sample_tr = np.concatenate((Sample_tr_neg, Sample_tr_pos), axis=0)  # array垂直拼接                    
-                    
-                    
-                    target = np.c_[X_test, y_test]
+                        = Random_Stratified_Sample_fraction(Samples_tr_all, string='bug', r=r)  # random sample 90% negative samples and 90% positive samples
+                    Sample_tr = np.concatenate((Sample_tr_neg, Sample_tr_pos), axis=0)  # array垂直拼接
+                    data_train = pd.DataFrame(Sample_tr)
+                    data_train_unique = Drop_Duplicate_Samples(data_train)  # drop duplicate samples
+                    data_train_unique = data_train_unique.values
+                    X_train = data_train_unique[:, : -1]
+                    y_train = data_train_unique[:, -1]
+                    X_train_zscore, X_test_zscore = Standard_Features(X_train, 'zscore', X_test)  # data transformation
+                    target = np.c_[X_test_zscore, y_test]
 
+                    # /* step2: WiFF(weighted iForest Filter) */
                     # *******************WiFF*********************************
                     method_name = mode[1] + '_' + mode[2]  # scenario + filter method
                     print('----------%s:%d/%d------' % (method_name, r + 1, runtimes))
-                    #  iForest_parameters = [itree_num, subsamples, hlim, mode, s0, alpha]
-                    X_train_new, y_train_new, X_test_new, y_test_new = Process_Data(Sample_tr[:, :-1], Sample_tr[:, -1],
-                                                                                    X_test, y_test, preprocess_mode,
-                                                                                    iForest_parameters, r)
-                     
+                    X_train_neg0, X_train_pos0, y_train_neg0, y_train_pos0 = DevideData2TwoClasses(X_train_zscore, y_train)  # original X+,y+,X-,y-
+                    X_train_resampled, y_train_resampled = DataImbalance(X_train_zscore, y_train, r, mode='smote')  # Data imbalance
+                    X_train_neg, X_train_pos, y_train_neg, y_train_pos = DevideData2TwoClasses(X_train_resampled, y_train_resampled)  # DB X+,y+,X-,y-
+
+                    # iForest_parameters = [itree_num, subsamples, hlim, mode, s0, alpha]
+                    itree_num = iForest_parameters[0]
+                    subsamples = iForest_parameters[1]
+                    hlim = iForest_parameters[2]
+                    mode_if = iForest_parameters[3]
+                    s0 = iForest_parameters[4]
+                    alpha = iForest_parameters[5]
+
+                    forest = IForest(itree_num, subsamples, hlim)  # build an iForest(t, subsample, hlim)
+                    s, rate, abnormal_list = forest.Build_Forest(X_train_neg, mode_if, r, s0, alpha)
+                    ranges_X_train_neg, Sample_X_train_neg = Delete_abnormal_samples(X_train_neg, abnormal_list)
+                    ranges_y_train_neg, Sample_y_train_neg = Delete_abnormal_samples(y_train_neg, abnormal_list)
+
+                    s_weight, rate_weight, abnormal_list_weight = forest.Build_Weight_Forest(X_train_pos0, X_train_pos, mode_if, r, s0, alpha)
+                    ranges_X_train_pos_weight, Sample_X_train_pos_weight = Delete_abnormal_samples(X_train_pos, abnormal_list_weight)
+                    ranges_y_train_pos_weight, Sample_y_train_pos_weight = Delete_abnormal_samples(y_train_pos, abnormal_list_weight)
+                    X_train_new = np.concatenate((Sample_X_train_neg, Sample_X_train_pos_weight), axis=0)  # array垂直拼接
+                    y_train_new = np.array(Sample_y_train_neg.tolist() + Sample_y_train_pos_weight.tolist())  # list垂直拼接
+
+                    # /* step3: Model building and evaluation */
                     # Train model: classifier / model requiresSelection_Classifications the label must beong to {0, 1}.
-                    modelname_WiFF, model_WiFF = (clf_index, r)  # select classifier
-                    classifiername.append(modelname_WiFF)
-                    # print("modelname_WiFF:", modelname_WiFF)
-                    measures_WiFF = Build_Evaluation_Classification_Model(model_WiFF, X_train_new, y_train_new, X_test_new, y_test_new)  # build and evaluate models
+                    modelname_wiff, model_wiff = Selection_Classifications(clf_index, r)  # select classifier
+                    classifiername.append(modelname_wiff)
+                    # print("modelname_wiff:", modelname_wiff)
+                    measures_wiff = Build_Evaluation_Classification_Model(model_wiff, X_train_new, y_train_new, X_test_zscore, y_test)  # build and evaluate models
                     end_time = time.time()
                     run_time = end_time - start_time
-                    measures_WiFF.update(
-                        {'train_len_before': len(Sample_tr), 'train_len_after': len(Sample_tr), 'test_len': len(target),
-                         'runtime': run_time, 'clfindex': clf_index, 'clfname': modelname_WiFF,
+                    measures_wiff.update(
+                        {'train_len_before': len(X_train), 'train_len_after': len(X_train_new), 'test_len': len(X_test),
+                         'runtime': run_time, 'clfindex': clf_index, 'clfname': modelname_wiff,
                          'testfile': file_te, 'trainfile': 'More1', 'runtimes': r + 1})
-                    df_m2ocp_measures = pd.DataFrame(measures_WiFF, index=[r])
+                    df_m2ocp_measures = pd.DataFrame(measures_wiff, index=[r])
                     # print('df_m2ocp_measures:\n', df_m2ocp_measures)
                     df_r_measures = pd.concat([df_r_measures, df_m2ocp_measures], axis=0, sort=False,
                                               ignore_index=False)
                 else:
                     pass
 
-            # print('df_file_measures:\n', df_file_measures)
-            # print('所有文件运行一次的结果为：\n', df_file_measures)
-            df_file_measures = pd.concat([df_file_measures, df_r_measures], axis=0, sort=False,
-                                         ignore_index=False)  # the measures of all files in runtimes
-            # df_r_measures['testfile'] = file_list
-            # print('df_r_measures1:\n', df_r_measures)
+            df_file_measures = pd.concat([df_file_measures, df_r_measures], axis=0, sort=False, ignore_index=False)  # the measures of all files in runtimes
 
     modelname = np.unique(classifiername)
     # pathname = spath + '\\' + (save_file_name + '_clf' + str(clf_index) + '.csv')
@@ -706,11 +732,13 @@ def WiFF_main(mode, clf_index, runtimes):
     # print('df_file_measures:\n', df_file_measures)
     return df_file_measures
 
+
 if __name__ == '__main__':
-    iForest_parameters = [100, 256, 255, 'rate', 0.5, 0.1] # default values of iForest
-    
-    mode = [[1, 0, 0, 'Burak_Filter', 'zscore', 'smote'], 'M2O_CPDP', 'eg_WiFF', iForest_parameters]
-  
+
+    iForest_parameters = [100, 256, 255, 'rate', 0.5, 0.1]  # default values of iForest
+
+    # mode = [[1, 1, 1, '', 'zscore', 'smote'], 'M2O_CPDP', 'eg_WiFF', iForest_parameters]
+    mode = [iForest_parameters, 'M2O_CPDP', 'eg_WiFF']
     foldername = mode[1] + '_' + mode[2]
     # only NB classifier needs to log normalization for WiFF
     WiFF_main(mode=mode, clf_index=0, runtimes=2)

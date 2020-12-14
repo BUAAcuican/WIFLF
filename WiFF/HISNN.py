@@ -20,7 +20,7 @@ from scipy.linalg import det
 from ClassificationModel import Selection_Classifications, Build_Evaluation_Classification_Model
 from DataProcessing import Check_NANvalues, DataFrame2Array, DataImbalance, Delete_abnormal_samples, \
      DevideData2TwoClasses, Drop_Duplicate_Samples, indexofMinMore, indexofMinOne, NumericStringLabel2BinaryLabel, \
-     Process_Data, Random_Stratified_Sample_fraction, Standard_Features, Log_transformation
+     Random_Stratified_Sample_fraction, Standard_Features, Log_transformation  # Process_Data,
 from Performance import performance
 import math
 import heapq
@@ -341,19 +341,27 @@ def HISNN_main(mode, clf_index, runtimes):
                                                        sort=False)
                     # Samples_tr_all.to_csv(f2, index=None, columns=None)  # 将类标签二元化的数据保存，保留列名，不增加行索引
 
-                    # random sample 90% negative samples and 90% positive samples
-                    string = 'bug'
+                    # /* step1: data preprocessing */
                     Sample_tr_pos, Sample_tr_neg, Sample_pos_index, Sample_neg_index \
-                        = Random_Stratified_Sample_fraction(Samples_tr_all, string, r=r)
+                                = Random_Stratified_Sample_fraction(Samples_tr_all, string='bug', r=r)  # random sample 90% negative samples and 90% positive samples
                     Sample_tr = np.concatenate((Sample_tr_neg, Sample_tr_pos), axis=0)  # array垂直拼接
-                    data_train_unique = Drop_Duplicate_Samples(pd.DataFrame(Sample_tr))  # drop duplicate samples
-                    source = data_train_unique.values
-                    target = np.c_[X_test, y_test]
+                    data_train = pd.DataFrame(Sample_tr)
+                    data_train_unique = Drop_Duplicate_Samples(data_train)  # drop duplicate samples
+                    data_train_unique = data_train_unique.values
+                    X_train = data_train_unique[:, : -1]
+                    y_train = data_train_unique[:, -1]
+                    X_train_zscore, X_test_zscore = Standard_Features(X_train, 'zscore', X_test)  # data transformation
+                    # source = np.concatenate((X_train_zscore, y_train), axis=0)  # array垂直拼接
+                    source = np.c_[X_train_zscore, y_train]
+                    target = np.c_[X_test_zscore, y_test]
 
+                    # /* step2: data filtering */
                     # *******************HISNN*********************************
                     method_name = mode[1] + '_' + mode[2]  # scenario + filter method
                     print('----------%s:%d/%d------' % (method_name, r + 1, runtimes))
                     source_HISNN = HISNN_train(source, target, K=10)
+
+                    # /* step3: Model building and evaluation */
                     # Train model: LR as classifier, model requires the label must beong to {0, 1}.
                     modelname_hisnn, model_hisnn = Selection_Classifications(clf_index, r)  # select classifier
                     classifiername.append(modelname_hisnn)
@@ -363,7 +371,7 @@ def HISNN_main(mode, clf_index, runtimes):
                     end_time = time.time()
                     run_time = end_time - start_time
                     measures_hisnn.update(
-                        {'train_len_before': len(Sample_tr), 'train_len_after': len(Sample_tr), 'test_len': len(target),
+                        {'train_len_before': len(X_train), 'train_len_after': len(source), 'test_len': len(target),
                          'runtime': run_time, 'clfindex': clf_index, 'clfname': modelname_hisnn,
                          'testfile': file_te, 'trainfile': 'More1', 'runtimes': r + 1})
                     df_m2ocp_measures = pd.DataFrame(measures_hisnn, index=[r])

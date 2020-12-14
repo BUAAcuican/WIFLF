@@ -101,8 +101,5 @@ def Build_Evaluation_Classification_Model(classifier, X_train, y_train, X_test, 
     return measures
 
 if __name__ == '__main__':
-    # 比较选择的标准化的方法
-    iForest_parameters = [100, 256, 255, 'rate', 0.5, 0.1]
-    methods = ['O2O_CPDP', 'M2O_CPDP', 'M2O_CPDP2']    #  'CV_WPDP',
-    for method in methods:
-        Compare_standard_methods(methods=method, iForest_parameters=iForest_parameters)
+
+   pass

@@ -30,14 +30,11 @@ from sklearn import preprocessing, model_selection, metrics,\
 
 from DataProcessing import Check_NANvalues, DataFrame2Array, DataImbalance, Delete_abnormal_samples, \
      DevideData2TwoClasses, Drop_Duplicate_Samples, indexofMinMore, indexofMinOne, NumericStringLabel2BinaryLabel, \
-     Process_Data, Random_Stratified_Sample_fraction, Standard_Features
+     Random_Stratified_Sample_fraction, Standard_Features  # Process_Data,
 from Performance import performance
 
-# from WiFmain import WiF
-# from BurakFilter import BF_main
-# from HISNN import HISNN_main
-from TNB import TNB
-from TCAPlus import TCAplus
+# from TNB import TNB
+# from TCAPlus import TCAplus
 
 
 
@@ -358,137 +355,121 @@ def apply_learner(datasets, learner):
         return True
 
 
-def Bellwether_main(fpath, learnername, mode, clf_index, spath, runtimes):
+def Bellwether_main(learnername, mode, clf_index, runtimes):
+
+    pwd = os.getcwd()
+    print(pwd)
+    father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + ".")
+    # print(father_path)
+    datapath = father_path + '/dataset-inOne/'
+    spath = father_path + '/results/'
+    if not os.path.exists(spath):
+        os.mkdir(spath)
+
+    # datasets = [['ant-1.3.csv', 'arc-1.csv', 'camel-1.0.csv', 'ivy-1.4.csv', 'jedit-3.2.csv', 'log4j-1.0.csv', 'lucene-2.0.csv', 'poi-2.0.csv', 'redaktor-1.csv', 'synapse-1.0.csv', 'tomcat-6.0.389418.csv', 'velocity-1.6.csv', 'xalan-2.4.csv', 'xerces-init.csv'],
+    #         ['ant-1.7.csv', 'arc-1.csv', 'camel-1.6.csv', 'ivy-2.0.csv', 'jedit-4.3.csv', 'log4j-1.1.csv', 'lucene-2.0.csv', 'poi-2.0.csv', 'redaktor-1.csv', 'synapse-1.2.csv', 'tomcat-6.0.389418.csv', 'velocity-1.6.csv', 'xalan-2.6.csv', 'xerces-1.3.csv'],
+    #         ['EQ.csv', 'JDT.csv', 'LC.csv', 'ML.csv', 'PDE.csv'],
+    #         ['Apache.csv', 'Safe.csv', 'Zxing.csv']]
+    datasets = [['ant-1.3.csv', 'arc-1.csv', 'camel-1.0.csv'], ['Apache.csv', 'Safe.csv', 'Zxing.csv']]
+    datanum = 0
+    for i in range(len(datasets)):
+        datanum = datanum + len(datasets[i])
+    # print(datanum)
     # mode = [preprocess_mode, train_mode, save_file_name]
     preprocess_mode = mode[0]
     train_mode = mode[1]
     save_file_name = mode[2]
-    df_r_measures = pd.DataFrame()  # the measures of all files in runtimes
+    df_file_measures = pd.DataFrame()  # the measures of all files in all runtimes
     classifiername = []
-    for r in range(runtimes):
-        file_list = os.listdir(fpath)
-        df_file_measures = pd.DataFrame()  # the measures of all files in each runtime
-        for targetfile in file_list:
+    # file_list = os.listdir(fpath)
+
+    n = 0
+    for i in range(len(datasets)):
+        for file_te in datasets[i]:
+            n = n + 1
+            print('----------%s:%d/%d------' % ('Dataset', n, datanum))
+            # print('testfile', file_te)
             start_time = time.time()
-            Address_te = fpath + '\\' + targetfile
-            Samples_te = NumericStringLabel2BinaryLabel(Address_te)   # target data, type:DataFrame
+
+            Address_te = datapath + file_te
+            Samples_te = NumericStringLabel2BinaryLabel(Address_te)  # DataFrame
             data = Samples_te.values  # DataFrame2Array
             X = data[:, : -1]  # test features
             y = data[:, -1]  # test labels
-            Sample_tr0 = NumericStringLabel2BinaryLabel(fpath + '\\' + file_list[0])
+            Sample_tr0 = NumericStringLabel2BinaryLabel(Address_te)
             column_name = Sample_tr0.columns.values  # the column name of the data
-            if train_mode == 'O2O_CPDP':
-                datasets = []
-                for datafile in file_list:
-                    if datafile != targetfile:
-                        datasets.append(fpath + '\\' + datafile)
-                # df_tr_measures = pd.DataFrame()  # 每个测试集对应的训练集的所有结果
-                Samples_tr, bellwether_path = discover(datasets, runtimes, clf_index)  # bellwether data, type:dataframe
-                # print('target:', targetfile, "bellwether:", bellwether_path)
-                file_tr = bellwether_path.split('\\')[-1].rstrip('"')
-                X_test = X
-                y_test = y
-                Samples_tr.columns = column_name.tolist()  # 批量更改列名
-                # Samples_tr.to_csv(f2, index=None, columns=None)  # 将类标签二元化的数据保存，保留列名，不增加行索引
-                # random sample 90% negative samples and 90% positive samples
-                string = 'bug'
-                Sample_tr_pos, Sample_tr_neg, Sample_pos_index, Sample_neg_index \
-                    = Random_Stratified_Sample_fraction(Samples_tr, string, r=r)
-                Sample_tr = np.concatenate((Sample_tr_neg, Sample_tr_pos), axis=0)  # array垂直拼接
-                data_train_unique = Drop_Duplicate_Samples(pd.DataFrame(Sample_tr))  # drop duplicate samples
-                source = data_train_unique.values
-                target = np.c_[X_test, y_test]
-                # Train，build and evaluate model: model requires the label must beong to {0, 1}.
-                source = pd.DataFrame(source)
-                source.columns = column_name.tolist()  # 批量更改列名
-                target = pd.DataFrame(target)  # note: type transfer
-                target.columns = column_name.tolist()  # 批量更改列名
-                measures = learner(source, target, learnername, clf_index, r)  # learner
-                modeldict = {0: "NB", 1: "LR", 2: "RF"}
-                modelname = modeldict[clf_index]
-                classifiername.append(modelname)
-                # print("modelname:", modelname)
-                end_time = time.time()
-                run_time = end_time - start_time
-                measures.update({'train_len_before': len(Sample_tr),
-                                 'train_len_after': len(source),
-                                 'test_len': len(target),
-                                 'runtime': run_time,
-                                 'clf': clf_index,
-                                 'testfile': targetfile,
-                                 'trainfile': file_tr})
-                df_o2ocp_measures = pd.DataFrame(measures, index=[r])
-                # # print('df_o2ocp_measures:\n', df_o2ocp_measures)
-                # df_tr_measures = pd.concat([df_tr_measures, df_o2ocp_measures],
-                #                            axis=0, sort=False, ignore_index=False)
-                # # print('\n df_tr_measures:\n', df_tr_measures)
-                df_file_measures = pd.concat([df_file_measures, df_o2ocp_measures],
-                                             axis=0, sort=False, ignore_index=False)
-                df_file_measures['runtimes'] = r + 1
 
-            elif train_mode == 'M2O_CPDP':
-                datasets = []
-                for datafile in file_list:
-                    if datafile != targetfile:
-                        datasets.append(fpath + '\\' + datafile)
-                df_tr_measures = pd.DataFrame()  # 每个测试集对应的训练集的所有结果
-                Samples_tr, bellwether_path = discoverMore(datasets, runtimes, clf_index)  # bellwether data, type:dataframe
-                # print('target:', targetfile, "bellwether:", bellwether_path)
-                file_tr = bellwether_path.split('\\')[-1].rstrip('"')
-                X_test = X
-                y_test = y
-                Samples_tr.columns = column_name.tolist()  # 批量更改列名
-                # Samples_tr.to_csv(f2, index=None, columns=None)  # 将类标签二元化的数据保存，保留列名，不增加行索引
-                # random sample 90% negative samples and 90% positive samples
-                string = 'bug'
-                Sample_tr_pos, Sample_tr_neg, Sample_pos_index, Sample_neg_index \
-                    = Random_Stratified_Sample_fraction(Samples_tr, string, r=r)
-                Sample_tr = np.concatenate((Sample_tr_neg, Sample_tr_pos), axis=0)  # array垂直拼接
-                data_train_unique = Drop_Duplicate_Samples(pd.DataFrame(Sample_tr))  # drop duplicate samples
-                source = data_train_unique.values
-                target = np.c_[X_test, y_test]
-                # Train，build and evaluate model: model requires the label must beong to {0, 1}.
-                source = pd.DataFrame(source)
-                source.columns = column_name.tolist()  # 批量更改列名
-                target = pd.DataFrame(target)  # note: type transfer
-                target.columns = column_name.tolist()  # 批量更改列名
-                measures = learner(source, target, learnername, clf_index, r)  # learner
-                modeldict = {0: "NB", 1: "LR", 2: "RF"}
-                modelname = modeldict[clf_index]
-                classifiername.append(modelname)
-                # print("modelname:", modelname)
-                end_time = time.time()
-                run_time = end_time - start_time
-                measures.update({'train_len_before': len(Sample_tr),
-                                 'train_len_after': len(source),
-                                 'test_len': len(target),
-                                 'runtime': run_time,
-                                 'clf': clf_index,
-                                 'testfile': targetfile,
-                                 'trainfile': file_tr})
-                df_o2ocp_measures = pd.DataFrame(measures, index=[r])
-                # # print('df_o2ocp_measures:\n', df_o2ocp_measures)
-                # df_tr_measures = pd.concat([df_tr_measures, df_o2ocp_measures],
-                #                            axis=0, sort=False, ignore_index=False)
-                # # print('\n df_tr_measures:\n', df_tr_measures)
-                df_file_measures = pd.concat([df_file_measures, df_o2ocp_measures],
-                                             axis=0, sort=False, ignore_index=False)
-                df_file_measures['runtimes'] = r + 1
-        df_r_measures = pd.concat([df_r_measures, df_file_measures],
-                                  axis=0, sort=False, ignore_index=False)
-        # print(df_r_measures.head(5))
-        # print('df_r_measures:\n', df_r_measures)
-        method_name = mode[1] + '_' + mode[2]  # scenarios + filter method
-        print('Bellwether:----------%s:%d/%d------Finished!' % (method_name, r + 1, runtimes))
+            df_r_measures = pd.DataFrame()  # the measures of each file in runtimes
+            for r in range(runtimes):
+                if train_mode == 'M2O_CPDP':  # train data contains more files different from the test data project
+                    X_test = X
+                    y_test = y
+                    Samples_tr_all = pd.DataFrame()  # initialize the candidate training data of all cp data
+                    for file_tr in datasets[i]:
+                        if file_tr != file_te:
+                            # print('train_file:', file_tr)
+                            Address_tr = datapath + file_tr
+                            Samples_tr = NumericStringLabel2BinaryLabel(Address_tr)  # original train data, DataFrame
+                            Samples_tr.columns = column_name.tolist()  # 批量更改列名
+                            Samples_tr_all = pd.concat([Samples_tr_all, Samples_tr], ignore_index=False, axis=0,
+                                                       sort=False)
+                    # Samples_tr_all.to_csv(f2, index=None, columns=None)  # 将类标签二元化的数据保存，保留列名，不增加行索引
+
+                    # /* step1: data preprocessing */
+                    # random sample 90% negative samples and 90% positive samples
+                    Sample_tr_pos, Sample_tr_neg, Sample_pos_index, Sample_neg_index \
+                        = Random_Stratified_Sample_fraction(Samples_tr_all, string='bug', r=r)  # random sample 90% negative samples and 90% positive samples
+                    Sample_tr = np.concatenate((Sample_tr_neg, Sample_tr_pos), axis=0)  # array垂直拼接
+                    data_train = pd.DataFrame(Sample_tr)
+                    data_train_unique = Drop_Duplicate_Samples(data_train)  # drop duplicate samples
+                    data_train_unique = data_train_unique.values
+                    X_train = data_train_unique[:, : -1]
+                    y_train = data_train_unique[:, -1]
+                    X_train_zscore, X_test_zscore = Standard_Features(X_train, 'zscore', X_test)  # data transformation
+                    source = np.c_[X_train_zscore, y_train]
+                    target = np.c_[X_test_zscore, y_test]
+
+                    # /* step2: Bellwether filtering processing */
+                    # *******************Bellwether*********************************
+                    method_name = mode[1] + '_' + mode[2]  # scenario + filter method
+                    print('----------%s:%d/%d------' % (method_name, r + 1, runtimes))
+                    source = pd.DataFrame(source)
+                    source.columns = column_name.tolist()  # 批量更改列名
+                    target = pd.DataFrame(target)  # note: type transfer
+                    target.columns = column_name.tolist()  # 批量更改列名
+                    measures_bellwether = learner(source, target, learnername, clf_index, r)  # learner
+
+                    # /* step3: Model building and evaluation */
+                    # Train，build and evaluate model: model requires the label must beong to {0, 1}.
+
+                    modeldict = {0: "NB", 1: "LR", 2: "RF"}
+                    modelname_bellwether = modeldict[clf_index]
+                    classifiername.append(modelname_bellwether)
+                    # print("modelname:", modelname)
+                    end_time = time.time()
+                    run_time = end_time - start_time
+                    measures_bellwether.update(
+                        {'train_len_before': len(X_train), 'train_len_after': len(source), 'test_len': len(X_test_zscore),
+                         'runtime': run_time, 'clfindex': clf_index, 'clfname': modelname_bellwether,
+                         'testfile': file_te, 'trainfile': 'More1', 'runtimes': r + 1})
+                    df_m2ocp_measures = pd.DataFrame(measures_bellwether, index=[r])
+                    # print('df_m2ocp_measures:\n', df_m2ocp_measures)
+                    df_r_measures = pd.concat([df_r_measures, df_m2ocp_measures], axis=0, sort=False, ignore_index=False)
+                else:
+                    pass
+
+            df_file_measures = pd.concat([df_file_measures, df_r_measures], axis=0, sort=False,
+                                         ignore_index=False)  # the measures of all files in runtimes
 
     modelname = np.unique(classifiername)
-    if not os.path.exists(spath):
-        os.mkdir(spath)
     # pathname = spath + '\\' + (save_file_name + '_clf' + str(clf_index) + '.csv')
-    pathname = spath + '\\' + (save_file_name + '_' + learnername + '_' + modelname[0] + '.csv')
-    df_r_measures.to_csv(pathname)
-    print('df_r_measures:\n', df_r_measures)
-    return df_r_measures
+    pathname = spath + '\\' + (save_file_name + '_' + modelname[0] + '.csv')
+    df_file_measures.to_csv(pathname)
+    # print('df_file_measures:\n', df_file_measures)
+    return df_file_measures
+
+
+
 
 
 def _test_SMOTE_Data():
@@ -510,11 +491,11 @@ def _test_discover():
 if __name__ == '__main__':
     # _test_SMOTE_Data()
     # _test_discover()
-    fpath = r'D:\PycharmProjects\cuican\data2020\Relink\data'
+    # fpath = r'D:\PycharmProjects\cuican\data2020\Relink\data'
     # transfer(fpath, 'Naive', fpath, Runtimes=30)
-    spath = r'D:\PycharmProjects\cuican\data2020\Relink'
-    mode = ['null', 'M2O_CPDP', 'Bellwether', 'null']
+
+    mode = ['null', 'M2O_CPDP', 'eg_Bellwether']
     foldername = mode[1] + '_' + mode[2]
-    for i in range(1):
-        Bellwether_main(fpath, 'Naive', mode, i, spath=spath + "\\" + foldername, runtimes=3)
+    for i in range(1, 3, 1):
+        Bellwether_main('Naive', mode, i, runtimes=3)
 

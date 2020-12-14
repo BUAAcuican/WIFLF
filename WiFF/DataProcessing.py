@@ -48,174 +48,6 @@ from scipy.spatial.distance import pdist, squareform, mahalanobis
 # from __future__ import division
 
 
-def Process_Data(X_train, y_train, X_test, y_test, preprocess_mode, iForest_parameters, r):
-
-    # preprocess_mode = [drop, scale, DB, Filter, scale_mode, DB_mode]
-    drop = preprocess_mode[0]
-    scale = preprocess_mode[1]
-    DB = preprocess_mode[2]
-    Filter = preprocess_mode[3]
-    scale_mode = preprocess_mode[4]
-    DB_mode = preprocess_mode[5]
-
-    # preprocess_mode = [drop, scale, DB, WiF, iF, scale_mode, DB_mode]
-    # WiF = preprocess_mode[3]
-    # iF = preprocess_mode[4]
-    # scale_mode = preprocess_mode[5]
-    # DB_mode = preprocess_mode[6]
-
-    # iForest_parameters = [itree_num, subsamples, hlim, mode, s0, alpha]
-    itree_num = iForest_parameters[0]
-    subsamples = iForest_parameters[1]
-    hlim = iForest_parameters[2]
-    mode = iForest_parameters[3]
-    s0 = iForest_parameters[4]
-    alpha = iForest_parameters[5]
-    data_train = np.column_stack((X_train, y_train))  # 最后一列添加数据
-    check_tr_labels = list(set(y_train))
-    if len(check_tr_labels) == 2:
-        if drop == True:
-            data_train = pd.DataFrame(data_train)
-            data_train_unique = Drop_Duplicate_Samples(data_train)  # drop duplicate samples
-            data_train_unique = data_train_unique.values
-            X_train = data_train_unique[:, : -1]
-            y_train = data_train_unique[:, -1]
-
-            # print("X1", X_train[:2, :])
-
-        if scale == True:
-            X_train, X_test = Standard_Features(X_train, scale_mode, X_test)  # data transformation
-            # print("X2", X_train[:2, :])
-        else:
-            # print("X2'", X_train[:2, :])
-            pass
-
-
-        X_train_neg0, X_train_pos0, y_train_neg0, y_train_pos0 = DevideData2TwoClasses(X_train,
-                                                                                       y_train)  # original X+,y+,X-,y-
-        if DB == True:
-            X_train_resampled, y_train_resampled = DataImbalance(X_train, y_train, r, DB_mode)  # Data imbalance
-            X_train_neg, X_train_pos, y_train_neg, y_train_pos = DevideData2TwoClasses(X_train_resampled,
-                                                                                       y_train_resampled)  # DB X+,y+,X-,y-
-            # if WiF == True:
-            if Filter == 'Weight_iForest':
-
-                # delete noise data from negative samples by building an iForest
-                # forest = IForest(100, 256, 255)  # build an iForest(t, subsample, hlim)
-                # s, rate, abnormal_list = forest.Build_Forest(X_train_neg, mode='rate', r=r, s0=0.5, alpha=0.1)
-                forest = IForest(itree_num, subsamples, hlim)  # build an iForest(t, subsample, hlim)
-                s, rate, abnormal_list = forest.Build_Forest(X_train_neg, mode, r, s0, alpha)
-                ranges_X_train_neg, Sample_X_train_neg = Delete_abnormal_samples(X_train_neg, abnormal_list)
-                ranges_y_train_neg, Sample_y_train_neg = Delete_abnormal_samples(y_train_neg, abnormal_list)
-
-                # delete noise data from positive samples by building a weight iForest
-                # s_weight, rate_weight, abnormal_list_weight = forest.Build_Weight_Forest(X_train_pos0, X_train_pos,
-                #                                                                          mode='rate', r=r, s0=0.50,
-                #                                                                          alpha=0.1)
-                s_weight, rate_weight, abnormal_list_weight = forest.Build_Weight_Forest(X_train_pos0, X_train_pos,
-                                                                                         mode, r, s0, alpha)
-                ranges_X_train_pos_weight, Sample_X_train_pos_weight = Delete_abnormal_samples(X_train_pos,
-                                                                                               abnormal_list_weight)
-                ranges_y_train_pos_weight, Sample_y_train_pos_weight = Delete_abnormal_samples(y_train_pos,
-                                                                                               abnormal_list_weight)
-                X_train = np.concatenate((Sample_X_train_neg, Sample_X_train_pos_weight), axis=0)  # array垂直拼接
-                y_train = np.array(Sample_y_train_neg.tolist() + Sample_y_train_pos_weight.tolist())  # list垂直拼接
-
-            elif Filter == 'iForest':
-            # elif (WiF == False) and (iF == True):
-                # delete noise data from negative samples by building an iForest
-                # forest = IForest(100, 256, 255)  # build an iForest(t, subsample, hlim)
-                # s, rate, abnormal_list = forest.Build_Forest(X_train_neg, mode='rate', r=5, s0=0.5, alpha=0.1)
-                forest = IForest(itree_num, subsamples, hlim)  # build an iForest(t, subsample, hlim)
-                s, rate, abnormal_list = forest.Build_Forest(X_train_neg, mode, r, s0, alpha)
-                ranges_X_train_neg, Sample_X_train_neg = Delete_abnormal_samples(X_train_neg, abnormal_list)
-                ranges_y_train_neg, Sample_y_train_neg = Delete_abnormal_samples(y_train_neg, abnormal_list)
-
-                # delete noise data from positive samples by building an iForest
-                # s_pos, rate_pos, abnormal_list_pos = forest.Build_Forest(X_train_pos, mode='rate', r=5, s0=0.50,
-                #                                                          alpha=0.1)
-                s_pos, rate_pos, abnormal_list_pos = forest.Build_Forest(X_train_pos, mode, r, s0, alpha)
-                ranges_X_train_pos, Sample_X_train_pos = Delete_abnormal_samples(X_train_pos,
-                                                                                        abnormal_list_pos)
-                ranges_y_train_pos, Sample_y_train_pos = Delete_abnormal_samples(y_train_pos,
-                                                                                        abnormal_list_pos)
-                X_train = np.concatenate((Sample_X_train_neg, Sample_X_train_pos), axis=0)  # array垂直拼接
-                y_train = np.array(Sample_y_train_neg.tolist() + Sample_y_train_pos.tolist())  # list垂直拼接
-
-            elif Filter == 'Burak_Filter':
-                X_train,  y_train = BF(X_train, y_train, X_test, y_test, k=10)
-
-            elif Filter == 'HISNN':
-                X_train, y_train = HISNN(X_train, y_train, X_test, y_test, k=10)
-
-            elif Filter == 'HSBF':
-
-                X_train, y_train = HSBF(X_train, y_train, X_test, y_test, k=10)
-
-            elif Filter == 'DFAC':
-                X_train, y_train = DFAC(X_train, y_train, X_test, y_test)
-
-            elif Filter == 'None':
-                X_train = X_train_resampled
-                y_train = y_train_resampled
-
-        else:
-            if Filter == 'iForest':  # iF == True:
-                # delete noise data from negative samples by building an iForest
-                # forest = IForest(100, 256, 255)  # build an iForest(t, subsample, hlim)
-                # s, rate, abnormal_list = forest.Build_Forest(X_train_neg0, mode='rate', r=5, s0=0.5, alpha=0.1)
-                forest = IForest(itree_num, subsamples, hlim)  # build an iForest(t, subsample, hlim)
-                s, rate, abnormal_list = forest.Build_Forest(X_train_neg0, mode, r, s0, alpha)
-                ranges_X_train_neg, Sample_X_train_neg = Delete_abnormal_samples(X_train_neg0, abnormal_list)
-                ranges_y_train_neg, Sample_y_train_neg = Delete_abnormal_samples(y_train_neg0, abnormal_list)
-
-                # delete noise data from positive samples by building an iForest
-                # s_pos, rate_pos, abnormal_list_pos = forest.Build_Forest(X_train_pos0, mode='rate', r=5, s0=0.50,
-                #                                                          alpha=0.1)
-                s_pos, rate_pos, abnormal_list_pos = forest.Build_Forest(X_train_pos0, mode, r, s0, alpha)
-                ranges_X_train_pos, Sample_X_train_pos = Delete_abnormal_samples(X_train_pos0,
-                                                                                 abnormal_list_pos)
-                ranges_y_train_pos, Sample_y_train_pos = Delete_abnormal_samples(y_train_pos0,
-                                                                                 abnormal_list_pos)
-                X_train = np.concatenate((Sample_X_train_neg, Sample_X_train_pos), axis=0)  # array垂直拼接
-                y_train = np.array(Sample_y_train_neg.tolist() + Sample_y_train_pos.tolist())  # list垂直拼接
-
-            elif Filter == 'Burak_Filter':
-                X_train, y_train = BF(X_train, y_train, X_test, y_test, k=10)
-
-            elif Filter == 'HISNN':
-                X_train, y_train = HISNN(X_train, y_train, X_test, y_test, k=10)
-
-            elif Filter == 'HSBF':
-
-                X_train, y_train = HSBF(X_train, y_train, X_test, y_test, k=10)
-
-            elif Filter == 'DFAC':
-                X_train, y_train = DFAC(X_train, y_train, X_test, y_test)
-
-            elif Filter == 'iForest_Filter':  # apply original iForest
-                X_train0 = np.concatenate((X_train_neg0, X_train_pos0), axis=0)  # array垂直拼接
-                y_train0 = np.array(y_train_neg0.tolist() + y_train_pos0.tolist())  # list垂直拼接
-                forest = IForest(itree_num, subsamples, hlim)  # build an iForest(100, 256, 255)
-                s, rate, abnormal_list = forest.Build_Forest(X_train0, mode, r, s0, alpha)
-                ranges_X_train, X_train = Delete_abnormal_samples(X_train0, abnormal_list)
-                ranges_y_train, y_train = Delete_abnormal_samples(y_train0, abnormal_list)
-            elif Filter == 'None':
-                X_train = np.concatenate((X_train_neg0, X_train_pos0), axis=0)  # array垂直拼接
-                y_train = np.array(y_train_neg0.tolist() + y_train_pos0.tolist())  # list垂直拼接
-
-
-            else:
-                pass
-
-        return X_train, y_train, X_test, y_test
-
-    else:
-        return None
-
-
-
-
 def DataImbalance(X, y, r, mode='smote'):
     '''
     To sample X×y, and make the majority and the minority balanced
@@ -231,7 +63,7 @@ def DataImbalance(X, y, r, mode='smote'):
     # print(type(y), y_label_number)  # Counter({1: 163, 0: 305})
 
     if mode == 'ros':
-        print('......ROS:Data imbalance processing......')
+        print('*                  ROS:Data imbalance processing             *')
         # 使用RandomOverSampler从少数类的样本中进行随机采样来增加新的样本使各个分类均衡
         ros = RandomOverSampler(random_state=r + 1)
         X_resampled_ros, y_resampled_ros = ros.fit_sample(X, y)
@@ -240,7 +72,7 @@ def DataImbalance(X, y, r, mode='smote'):
         return X_resampled_ros, y_resampled_ros
 
     elif mode == 'smote':
-        print('......SMOTE:Data imbalance processing......')
+        print('*                  SMOTE:Data imbalance processing             *')
         # SMOTE: 对于少数类样本a, 随机选择一个最近邻的样本b, 然后从a与b的连线上随机选取一个点c作为新的少数类样本
         X_resampled_smote, y_resampled_smote = SMOTE(random_state=r + 1).fit_sample(X, y)
         y_smote = sorted(Counter(y_resampled_smote).items())
@@ -248,7 +80,7 @@ def DataImbalance(X, y, r, mode='smote'):
         return X_resampled_smote, y_resampled_smote
 
     elif mode == 'rus':
-        print('......RUS:Data imbalance processing......')
+        print('*                  RUS:Data imbalance processing......')
         # RandomUnderSampler函数是一种快速并十分简单的方式来平衡各个类别的数据: 随机选取数据的子集.
         rus = RandomUnderSampler(random_state=r + 1)
         X_resampled_rus, y_resampled_rus = rus.fit_sample(X, y)
@@ -288,7 +120,7 @@ def DevideData2TwoClasses(X, y):
              X_pos, y_pos: positive samples (features:X_pos, class labels: y_pos)
     '''
 
-    # print('......Devide data to 2 parts......')
+    # print('*                  Devide data to 2 parts......')
     X = list(X)
     X_neg = []
     y_neg = []
@@ -383,7 +215,7 @@ def Drop_Duplicate_Samples(data):
     :param data: type: DataFrame, m X n, m rows, n columns
     :return: data_unique: type: DataFrame, m' X n, m' rows, n columns, m'<= m
     '''
-    print('----Drop duplicate samples...')
+    print('*                  Drop duplicate samples...')
     data_unique = data.drop_duplicates(subset=None, keep='first', inplace=False)  # 默认值，删除重复行，只保留第一次，在副本上操作
     # data_unique.to_csv(spath + '\\' + f, index=None, columns=None)  # 没有重复数据，原数据保存，保留列名，不增加行索引
     # data_unique = data_unique.reset_index(drop=True)  # 重新设置行索引，并将旧的行索引删除
@@ -458,7 +290,7 @@ def Standard_Features(X_train, mode , X_test):
 
     # 正规化方法:z-score, 均值为0，方差为1， 适用于属性A的最大值和最小值未知的情况，或有超出取值范围的离群数据的情况。
     if mode == 'zscore':
-        print('----Do Z-score on source and target datasets according to source ...')
+        print('*                  Do Z-score on source & target datasets according to source ...')
         zscore_scaler = preprocessing.StandardScaler(copy=True, with_mean=True,
                                                      with_std=True)  # Binarizer, Imputer, LabelBinarizer
         zscore_scaler.fit(X_train)
@@ -469,15 +301,14 @@ def Standard_Features(X_train, mode , X_test):
     # 规范化方法：max-min normalization，原始数据的线性变换，使结果映射到[0,1]区间
     # 实现特征极小方差的鲁棒性以及在稀疏矩阵中保留零元素。（鲁棒性：表征控制系统对特性或参数扰动的不敏感性）
     elif mode == 'maxmin':
-        print('----Do max-min on source and target datasets  according to source ...')
+        print('*                  Do max-min on source & target datasets according to source ...')
         min_max_scaler = preprocessing.MinMaxScaler()
         X_train_minmax = min_max_scaler.fit_transform(X_train)
         X_test_minmax = min_max_scaler.transform(X_test)
         return X_train_minmax, X_test_minmax
     if mode == 'zscore_t':
-        print('----Do Z-score on source and target datasets according to target ...')
-        zscore_scaler = preprocessing.StandardScaler(copy=True, with_mean=True,
-                                                     with_std=True)  # Binarizer, Imputer, LabelBinarizer
+        print('*                  Do Z-score on source & target datasets according to target ...')
+        zscore_scaler = preprocessing.StandardScaler(copy=True, with_mean=True, with_std=True)  # Binarizer, Imputer, LabelBinarizer
         zscore_scaler.fit(X_test)
         X_test_zscore = zscore_scaler.transform(X_test)
         X_train_zscore = zscore_scaler.transform(X_train)
@@ -486,7 +317,7 @@ def Standard_Features(X_train, mode , X_test):
         # 规范化方法：max-min normalization，原始数据的线性变换，使结果映射到[0,1]区间
         # 实现特征极小方差的鲁棒性以及在稀疏矩阵中保留零元素。（鲁棒性：表征控制系统对特性或参数扰动的不敏感性）
     elif mode == 'maxmin_t':
-        print('----Do max-min on source and target datasets according to target ...')
+        print('*                  Do max-min on source and target datasets according to target ...')
         min_max_scaler = preprocessing.MinMaxScaler()
         X_test_minmax = min_max_scaler.fit_transform(X_test)
         X_train_minmax = min_max_scaler.transform(X_train)
@@ -510,19 +341,19 @@ def Standard_Features(X_train, mode , X_test):
             # return None
 
     elif mode == 'scale':
-        print('----Do score(mean=0, std=1) on source and target separately....')
+        print('*                  Do score(mean=0, std=1) on source and target separately....')
         X_train_scaled = preprocessing.scale(X_train)
         X_test_scaled = preprocessing.scale(X_test)
         return X_train_scaled, X_test_scaled
 
     elif mode == 'maxminscale':
-        print('----Do max-min on source and target separately....')
+        print('*                  Do max-min on source and target separately....')
         X_train_minmaxscaled = preprocessing.MinMaxScaler().fit_transform(X_train)
         X_test_minmaxscaled = preprocessing.MinMaxScaler().fit_transform(X_test)
         return X_train_minmaxscaled, X_test_minmaxscaled
 
     elif mode == 'logscale':
-        print('----Do log(x+1) on source and target separately....')
+        print('*                  Do log(x+1) on source and target separately....')
         X_train_logscaled = preprocessing.FunctionTransformer(np.log1p, validate=True).fit_transform(X_train)  # log1p = log(1+x)
         X_test_logscaled = preprocessing.FunctionTransformer(np.log1p, validate=True).fit_transform(X_test)
         return X_train_logscaled, X_test_logscaled
@@ -656,6 +487,172 @@ def get_keys(d, value):
 
 def get_values(d, key):
     return [v for k, v in d.items() if k == key]
+
+
+# def Process_Data(X_train, y_train, X_test, y_test, preprocess_mode, iForest_parameters, r):
+#
+#     # preprocess_mode = [drop, scale, DB, Filter, scale_mode, DB_mode]
+#     drop = preprocess_mode[0]
+#     scale = preprocess_mode[1]
+#     DB = preprocess_mode[2]
+#     Filter = preprocess_mode[3]
+#     scale_mode = preprocess_mode[4]
+#     DB_mode = preprocess_mode[5]
+#
+#     # preprocess_mode = [drop, scale, DB, WiF, iF, scale_mode, DB_mode]
+#     # WiF = preprocess_mode[3]
+#     # iF = preprocess_mode[4]
+#     # scale_mode = preprocess_mode[5]
+#     # DB_mode = preprocess_mode[6]
+#
+#     # iForest_parameters = [itree_num, subsamples, hlim, mode, s0, alpha]
+#     itree_num = iForest_parameters[0]
+#     subsamples = iForest_parameters[1]
+#     hlim = iForest_parameters[2]
+#     mode = iForest_parameters[3]
+#     s0 = iForest_parameters[4]
+#     alpha = iForest_parameters[5]
+#     data_train = np.column_stack((X_train, y_train))  # 最后一列添加数据
+#     check_tr_labels = list(set(y_train))
+#     if len(check_tr_labels) == 2:
+#         if drop == True:
+#             data_train = pd.DataFrame(data_train)
+#             data_train_unique = Drop_Duplicate_Samples(data_train)  # drop duplicate samples
+#             data_train_unique = data_train_unique.values
+#             X_train = data_train_unique[:, : -1]
+#             y_train = data_train_unique[:, -1]
+#
+#             # print("X1", X_train[:2, :])
+#
+#         if scale == True:
+#             X_train, X_test = Standard_Features(X_train, scale_mode, X_test)  # data transformation
+#             # print("X2", X_train[:2, :])
+#         else:
+#             # print("X2'", X_train[:2, :])
+#             pass
+#
+#
+#         X_train_neg0, X_train_pos0, y_train_neg0, y_train_pos0 = DevideData2TwoClasses(X_train,
+#                                                                                        y_train)  # original X+,y+,X-,y-
+#         if DB == True:
+#             X_train_resampled, y_train_resampled = DataImbalance(X_train, y_train, r, DB_mode)  # Data imbalance
+#             X_train_neg, X_train_pos, y_train_neg, y_train_pos = DevideData2TwoClasses(X_train_resampled,
+#                                                                                        y_train_resampled)  # DB X+,y+,X-,y-
+#             # if WiF == True:
+#             if Filter == 'Weight_iForest':
+#
+#                 # delete noise data from negative samples by building an iForest
+#                 # forest = IForest(100, 256, 255)  # build an iForest(t, subsample, hlim)
+#                 # s, rate, abnormal_list = forest.Build_Forest(X_train_neg, mode='rate', r=r, s0=0.5, alpha=0.1)
+#                 forest = IForest(itree_num, subsamples, hlim)  # build an iForest(t, subsample, hlim)
+#                 s, rate, abnormal_list = forest.Build_Forest(X_train_neg, mode, r, s0, alpha)
+#                 ranges_X_train_neg, Sample_X_train_neg = Delete_abnormal_samples(X_train_neg, abnormal_list)
+#                 ranges_y_train_neg, Sample_y_train_neg = Delete_abnormal_samples(y_train_neg, abnormal_list)
+#
+#                 # delete noise data from positive samples by building a weight iForest
+#                 # s_weight, rate_weight, abnormal_list_weight = forest.Build_Weight_Forest(X_train_pos0, X_train_pos,
+#                 #                                                                          mode='rate', r=r, s0=0.50,
+#                 #                                                                          alpha=0.1)
+#                 s_weight, rate_weight, abnormal_list_weight = forest.Build_Weight_Forest(X_train_pos0, X_train_pos,
+#                                                                                          mode, r, s0, alpha)
+#                 ranges_X_train_pos_weight, Sample_X_train_pos_weight = Delete_abnormal_samples(X_train_pos,
+#                                                                                                abnormal_list_weight)
+#                 ranges_y_train_pos_weight, Sample_y_train_pos_weight = Delete_abnormal_samples(y_train_pos,
+#                                                                                                abnormal_list_weight)
+#                 X_train = np.concatenate((Sample_X_train_neg, Sample_X_train_pos_weight), axis=0)  # array垂直拼接
+#                 y_train = np.array(Sample_y_train_neg.tolist() + Sample_y_train_pos_weight.tolist())  # list垂直拼接
+#
+#             elif Filter == 'iForest':
+#             # elif (WiF == False) and (iF == True):
+#                 # delete noise data from negative samples by building an iForest
+#                 # forest = IForest(100, 256, 255)  # build an iForest(t, subsample, hlim)
+#                 # s, rate, abnormal_list = forest.Build_Forest(X_train_neg, mode='rate', r=5, s0=0.5, alpha=0.1)
+#                 forest = IForest(itree_num, subsamples, hlim)  # build an iForest(t, subsample, hlim)
+#                 s, rate, abnormal_list = forest.Build_Forest(X_train_neg, mode, r, s0, alpha)
+#                 ranges_X_train_neg, Sample_X_train_neg = Delete_abnormal_samples(X_train_neg, abnormal_list)
+#                 ranges_y_train_neg, Sample_y_train_neg = Delete_abnormal_samples(y_train_neg, abnormal_list)
+#
+#                 # delete noise data from positive samples by building an iForest
+#                 # s_pos, rate_pos, abnormal_list_pos = forest.Build_Forest(X_train_pos, mode='rate', r=5, s0=0.50,
+#                 #                                                          alpha=0.1)
+#                 s_pos, rate_pos, abnormal_list_pos = forest.Build_Forest(X_train_pos, mode, r, s0, alpha)
+#                 ranges_X_train_pos, Sample_X_train_pos = Delete_abnormal_samples(X_train_pos,
+#                                                                                         abnormal_list_pos)
+#                 ranges_y_train_pos, Sample_y_train_pos = Delete_abnormal_samples(y_train_pos,
+#                                                                                         abnormal_list_pos)
+#                 X_train = np.concatenate((Sample_X_train_neg, Sample_X_train_pos), axis=0)  # array垂直拼接
+#                 y_train = np.array(Sample_y_train_neg.tolist() + Sample_y_train_pos.tolist())  # list垂直拼接
+#
+#             elif Filter == 'Burak_Filter':
+#                 X_train,  y_train = BF(X_train, y_train, X_test, y_test, k=10)
+#
+#             elif Filter == 'HISNN':
+#                 X_train, y_train = HISNN(X_train, y_train, X_test, y_test, k=10)
+#
+#             elif Filter == 'HSBF':
+#
+#                 X_train, y_train = HSBF(X_train, y_train, X_test, y_test, k=10)
+#
+#             elif Filter == 'DFAC':
+#                 X_train, y_train = DFAC(X_train, y_train, X_test, y_test)
+#
+#             elif Filter == 'None':
+#                 X_train = X_train_resampled
+#                 y_train = y_train_resampled
+#
+#         else:
+#             if Filter == 'iForest':  # iF == True:
+#                 # delete noise data from negative samples by building an iForest
+#                 # forest = IForest(100, 256, 255)  # build an iForest(t, subsample, hlim)
+#                 # s, rate, abnormal_list = forest.Build_Forest(X_train_neg0, mode='rate', r=5, s0=0.5, alpha=0.1)
+#                 forest = IForest(itree_num, subsamples, hlim)  # build an iForest(t, subsample, hlim)
+#                 s, rate, abnormal_list = forest.Build_Forest(X_train_neg0, mode, r, s0, alpha)
+#                 ranges_X_train_neg, Sample_X_train_neg = Delete_abnormal_samples(X_train_neg0, abnormal_list)
+#                 ranges_y_train_neg, Sample_y_train_neg = Delete_abnormal_samples(y_train_neg0, abnormal_list)
+#
+#                 # delete noise data from positive samples by building an iForest
+#                 # s_pos, rate_pos, abnormal_list_pos = forest.Build_Forest(X_train_pos0, mode='rate', r=5, s0=0.50,
+#                 #                                                          alpha=0.1)
+#                 s_pos, rate_pos, abnormal_list_pos = forest.Build_Forest(X_train_pos0, mode, r, s0, alpha)
+#                 ranges_X_train_pos, Sample_X_train_pos = Delete_abnormal_samples(X_train_pos0,
+#                                                                                  abnormal_list_pos)
+#                 ranges_y_train_pos, Sample_y_train_pos = Delete_abnormal_samples(y_train_pos0,
+#                                                                                  abnormal_list_pos)
+#                 X_train = np.concatenate((Sample_X_train_neg, Sample_X_train_pos), axis=0)  # array垂直拼接
+#                 y_train = np.array(Sample_y_train_neg.tolist() + Sample_y_train_pos.tolist())  # list垂直拼接
+#
+#             elif Filter == 'Burak_Filter':
+#                 X_train, y_train = BF(X_train, y_train, X_test, y_test, k=10)
+#
+#             elif Filter == 'HISNN':
+#                 X_train, y_train = HISNN(X_train, y_train, X_test, y_test, k=10)
+#
+#             elif Filter == 'HSBF':
+#
+#                 X_train, y_train = HSBF(X_train, y_train, X_test, y_test, k=10)
+#
+#             elif Filter == 'DFAC':
+#                 X_train, y_train = DFAC(X_train, y_train, X_test, y_test)
+#
+#             elif Filter == 'iForest_Filter':  # apply original iForest
+#                 X_train0 = np.concatenate((X_train_neg0, X_train_pos0), axis=0)  # array垂直拼接
+#                 y_train0 = np.array(y_train_neg0.tolist() + y_train_pos0.tolist())  # list垂直拼接
+#                 forest = IForest(itree_num, subsamples, hlim)  # build an iForest(100, 256, 255)
+#                 s, rate, abnormal_list = forest.Build_Forest(X_train0, mode, r, s0, alpha)
+#                 ranges_X_train, X_train = Delete_abnormal_samples(X_train0, abnormal_list)
+#                 ranges_y_train, y_train = Delete_abnormal_samples(y_train0, abnormal_list)
+#             elif Filter == 'None':
+#                 X_train = np.concatenate((X_train_neg0, X_train_pos0), axis=0)  # array垂直拼接
+#                 y_train = np.array(y_train_neg0.tolist() + y_train_pos0.tolist())  # list垂直拼接
+#
+#
+#             else:
+#                 pass
+#
+#         return X_train, y_train, X_test, y_test
+#
+#     else:
+#         return None
 
 
 if __name__ == '__main__':

@@ -28,7 +28,7 @@ import copy
 import time
 import os
 
-from WiFmain import WiFF_main
+from WiFF import WiFF_main
 from BurakFilter import BF_main
 from HISNN import HISNN_main
 from DFAC import DFAC_main
@@ -39,72 +39,68 @@ from Bellwether import Bellwether_main
 import multiprocessing
 from functools import partial
 
-def Main_WiFF():
+def Main_WiFF(runtimes):
     # iForest_parameters = [100, 256, 255, 'rate', 0.5, 0.1]  # default values of iForest
     iForest_parameters = [100, 256, 255, 'rate', 0.5, 0.6]  # acceptable values of WiFF
 
-    mode = [[1, 1, 1, 'Weight_iForest', 'zscore', 'smote'], 'M2O_CPDP', 'eg_WiFF', iForest_parameters]
+    mode = [iForest_parameters, 'M2O_CPDP', 'eg_WiFF']
     for i in range(1, 3, 1):
-        WiFF_main(mode=mode, clf_index=0, runtimes=2)
+        WiFF_main(mode=mode, clf_index=i, runtimes=runtimes)
 
-def MAIN_BF():
+def MAIN_BF(runtimes):
 
-    mode = [[1, 1, 1, 'BF', 'zscore', 'smote'], 'M2O_CPDP', 'eg_BF' ]
+    mode = ['', 'M2O_CPDP', 'eg_BF' ]
 
     # only NB classifier needs to log normalization for BF
     # BF_main(mode=mode, clf_index=0, runtimes=2)
-    foldername = mode[1] + '_' + mode[0][3]
 
     for i in range(1, 3, 1):
-        BF_main(mode=mode, clf_index=0, runtimes=2)
+        BF_main(mode=mode, clf_index=i, runtimes=runtimes)
 
 
 
-def MAIN_HISNN():
+def MAIN_HISNN(runtimes):
     mode = ['null', 'M2O_CPDP', 'eg_HISNN']
-    foldername = mode[1] + '_' + mode[2]
     for i in range(1, 3, 1):
-        DFAC_main(mode=mode, clf_index=0, runtimes=2)
+        DFAC_main(mode=mode, clf_index=i, runtimes=runtimes)
 
     # NB classifier needs to log normalization for HISNN
     # HISNN_main(mode=mode, clf_index=0, runtimes=2)
 
 
-def MAIN_DFAC():
-    mode = [[1, 1, 0, 'Weight_iForest', 'zscore', 'smote'], 'M2O_CPDP', 'eg_DFAC']
-    foldername = mode[1] + '_' + mode[2]
+def MAIN_DFAC(runtimes):
+    mode = ['', 'M2O_CPDP', 'eg_DFAC']
     for i in range(1, 3, 1):
-        DFAC_main(mode=mode, clf_index=0, runtimes=2)
+        DFAC_main(mode=mode, clf_index=i, runtimes=runtimes)
 
-def MAIN_HSBF():
+def MAIN_HSBF(runtimes):
 
-    mode = [[1, 1, 0, 'Weight_iForest', 'zscore', 'smote'], 'M2O_CPDP', 'eg_HSBF']
-    foldername = mode[1] + '_' + mode[2]
+    mode = ['', 'M2O_CPDP', 'eg_HSBF']
     for i in range(1, 3, 1):
-        HSBF_main(mode=mode, clf_index=0, runtimes=2)
+        HSBF_main(mode=mode, clf_index=i, runtimes=runtimes)
 
 
-def MAIN_Bellwether():
+def MAIN_Bellwether(runtimes):
 
-    mode = ['null', 'M2O_CPDP', 'Bellwether']
+    mode = ['null', 'M2O_CPDP', 'eg_Bellwether']
     learnername = 'Naive'
-    foldername = mode[1] + '_' + mode[2]
     for i in range(1, 3, 1):
-        Bellwether_main(learnername=learnername, mode=mode, clf_index=i, runtimes=30)
+        Bellwether_main(learnername=learnername, mode=mode, clf_index=i, runtimes=runtimes)
 
-def somefunc(iterable_term):
+def somefunc( iterable_term):
+    runtimes = 2
     if iterable_term == 6:
-        return MAIN_BF()
+        return MAIN_BF(runtimes)
     elif iterable_term == 2:
-        return MAIN_HISNN()
+        return MAIN_HISNN(runtimes)
     elif iterable_term == 4:
-        return MAIN_Bellwether()  #
+        return MAIN_Bellwether(runtimes)  #
     elif iterable_term == 1:
-        return MAIN_HSBF()
+        return MAIN_HSBF(runtimes)
     elif iterable_term == 3:
-        return MAIN_DFAC()
+        return MAIN_DFAC(runtimes)
     elif iterable_term == 5:
-        return Main_WiFF()
+        return Main_WiFF(runtimes)
 
 
 if __name__ == '__main__':

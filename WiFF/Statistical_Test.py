@@ -99,6 +99,7 @@ def CliffDeltaValues(data1, data2):
     :return:
     '''
     return True
+
 def Delta2Cohd(data1, data2):
     # https://rdrr.io/cran/orddom/man/delta2cohd.html
     return True
@@ -114,11 +115,22 @@ def Cohens_d(data1, data2):
     https://cloud.tencent.com/developer/article/1634971
     :param data1:
     :param data2:
-    :return:
+    :return:esl: effect size level
     '''
     d = (mean(data1) - mean(data2)) / (np.sqrt((stdev(data1) ** 2 + stdev(data2) ** 2) / 2))
+    esl = 'None'
+    if np.abs(d) >= 0.8:
+        esl = 'Large(L)'
+    elif np.abs(d) < 0.8 and np.abs(d) >= 0.5:
+        esl = 'Medium(M)'
+    elif np.abs(d) < 0.5 and np.abs(d) >= 0.2:
+        esl = 'Small(S)'
+    elif np.abs(d) < 0.2:
+        esl = 'Negligible(N)'
+    else:
+        print('d is wrong, please check...')
 
-    return d
+    return d, esl
 
 
 def Example_Cohens_d(x, y):
@@ -202,18 +214,33 @@ def T_test_CI_R2_Cohensd(data, pop_mean=20, alpha=0.05, t_ci=2.62):
 
     return t, p, p_oneTail, CI, d, R_2
 
-def WinTieLoss(p1, p2):
+def WinTieLoss(data1, data2, alpha, r):
     '''
 
     :param data1:
     :param data2:
-    :return:
+    :param data1:
+    :param data2:
+    :return: wtl
     '''
-    win, tie, loss
-    win = 0
     tie = 0
+    win = 0
     loss = 0
-    return True
+    for i in range(0, len(data1), r):
+        d1 = data1[i: i+r]
+        d2 = data2[i: i+r]
+        stat, p = Wilcoxon_signed_rank_test(d1, d2)
+        d, esl = Cohens_d(d1, d2)
+        if p > alpha:
+            tie = tie + 1
+        elif p <= alpha and d > 0:
+            win = win + 1
+        else:
+            loss = loss + 1
+
+    wtl = str(int(win)) + '/' + str(int(tie)) + '/' + str(int(loss))
+
+    return wtl
 
 def StatTest(fpath, spath):
    '''
@@ -282,6 +309,235 @@ def StatTest(fpath, spath):
                df_eachdata.to_csv(spath + '\\' + savename)
 
 
+def Average_Measures(fpath, spath, string):
+    """
+    Average_Measures() details is here：
+    1) Fill Nan values as 0;
+    2) Calculate mean/std/median of each dataset and all the datasets.
+    :param fpath: absolute path of all measures of different approaches, type: string
+                  In fpath, there are m * c csvfiles, m means No. of approaches, c means No. of classifiers;
+                  A file contains all measure results of all datasets for run n times.
+                  measures are: [AUC	Balance	MCC	G-Measure ...TP	TN	FP	FN  train_len_before
+                                train_len_after	test_len runtime clf testfile trainfile runtimes]
+                                (testfile and trainfile are string types, others are numeric.)
+                  k datasets and n run times, o2o means one is as test data, the rest are as train data, respectively.
+                  That is, there are k*(k-1)*n rows values and 1 row is column name.
+    :param spath: absolute path of all fillNan/mean/median/STD of different approaches, type: string
+                  fillNan files are just fill Nan of files in fpath as 0.
+                  mean/median/STD files: A file contains k+1 *(len(measures)-1). The file lists the measures mean/std/median
+                  value of every dataset and all dataset by one approach with one classifier.
+    :return: Null
+    """
+
+    file_list = os.listdir(fpath)
+    if not os.path.exists(spath):
+            os.mkdir(spath)
+    for file in file_list:
+        data = pd.read_csv(fpath + '\\' + file, encoding='gbk')
+        data_fillnan = data.fillna(0)
+
+        savepath = spath + '\\' + fpath.split('\\')[-1] + '_results'
+        if not os.path.exists(savepath):
+            os.mkdir(savepath)
+        data_fillnan.to_csv(savepath + '\\' + file, index=False)
+        data_fillnan.drop(columns=['Unnamed: 0', 'runtimes'], inplace=True)
+        # print(data_new.columns.values)
+        gbr = data_fillnan.groupby(string, group_keys=0)  # Grouping criteria are not shown  # as_index=False,
+        namelist = []
+        df_mean = pd.DataFrame()
+        df_std = pd.DataFrame()
+        df_median = pd.DataFrame()
+        for name, group in gbr:
+            if '.csv' in name:
+                namelist.append(name.rstrip('.csv'))
+            else:
+                namelist.append(name)
+            # mean
+            meaures_mean = group.mean()
+            df_meaures_mean = pd.DataFrame(meaures_mean)
+            df_meaures_mean = df_meaures_mean.T
+            df_mean = pd.concat([df_mean, df_meaures_mean])
+            # print(df_mean, type(df_mean))
+
+            # std
+            meaures_std = group.std()
+            df_meaures_std = pd.DataFrame(meaures_std)
+            df_meaures_std = df_meaures_std.T
+            df_std = pd.concat([df_std, df_meaures_std])
+
+            meaures_median = group.median()
+            df_meaures_median = pd.DataFrame(meaures_median)
+            df_meaures_median = df_meaures_median.T
+            df_median = pd.concat([df_median, df_meaures_median])
+
+        # print(df_mean.tail(3), len(df_mean))
+
+        df_mean = pd.concat([df_mean, pd.DataFrame(df_mean.mean()).T]) # mean of all datasets
+        df_std = pd.concat([df_std, pd.DataFrame(df_mean.std()).T])  # std of different datasets
+        df_median = pd.concat([df_median, pd.DataFrame(df_mean.median()).T])  # median of different datasets
+
+        # print(df_mean.tail(2), len(df_mean))
+        # print(namelist, type(namelist))
+        df_mean.index = namelist + ['mean']
+        df_std.index = namelist + ['std']
+        df_median.index = namelist + ['median']
+
+
+        df_mean.to_csv(savepath + '\\' + file.rstrip('.csv') + '_mean.csv')
+        df_std.to_csv(savepath + '\\' + file.rstrip('.csv') + '_std.csv')
+        df_median.to_csv(savepath + '\\' + file.rstrip('.csv') + '_median.csv')
+        # print(df_mean.tail(3), len(df_mean))
+
+def Concat_Average_Measures(fpath, spath, filestring, measurestring, name):
+    '''
+    concat average measures into one file
+    :param fpath:
+    :param spath:
+    :param filestring:
+    :param measurestring:
+    :return:
+    '''
+    if not os.path.exists(spath):
+            os.mkdir(spath)
+    folderlist = os.listdir(fpath)
+    # print(folderlist)
+    df_concat = pd.DataFrame()
+    for folder in folderlist:
+        filelist = os.listdir(fpath + '\\' + folder)
+        for file in filelist:
+            if filestring in file:
+                df = pd.read_csv(fpath + '\\' + folder + '\\' + file)
+                df_measures = df[measurestring]
+                df_measures.index = df.iloc[:, 0]
+                df_measures.loc['method'] = file.rstrip('.csv')
+                df_concat = pd.concat([df_concat, df_measures], axis=1, ignore_index=False)
+
+    # df_concat.columns = filelist
+    df_concat.to_csv(spath + '\\' + filestring + '_' + name + '.csv')
+
+def Pvalues_Dvalues_ESL_WTL(fpath, spath, filestring, m, r):
+    '''
+    Calculate p-value by Wilcoxon_signed_rank_test(), d values and effect size level by Cohens_d(),
+    win/tie/loss results by WinTieLoss().
+    :param fpath: absolute path about files waiting for statistical test. All the files in 'fpath' are normal csv file.
+                  i.e., ============================
+                        |  A,|   B,|   C,|    D,|...
+                        ============================
+                        |0.5,|0.79,| 0.7,| 0.43,|...
+                        ============================
+    :param spath: absolute path about stats test results
+    :param filestring: part save name of stats and wtl .csv files
+    :param m: the index of column of data1
+    :param r: the runtimes of one each dataset, i.e, the repeat values about one project
+    :return: None
+    '''
+    if not os.path.exists(spath):
+            os.mkdir(spath)
+    filelist = os.listdir(fpath)
+    for file in filelist:
+        df = pd.read_csv(fpath + '\\' + file)
+        wintieloss = []
+        df_stas_all = pd.DataFrame()
+        columns_wtl = []
+        d1 = df.iloc[:, m].astype(float)   # keep float data
+        for j in range(0, len(df.columns.values), 1):
+            if df.columns.values[j] != df.columns.values[m]:
+                d2 = df.iloc[:, j]  # keep float data
+                alpha = 0.05
+                wtl = WinTieLoss(d1, d2, alpha, r)
+                columns_wtl.append(df.columns.values[j])
+                pvalues = []
+                dvalues = []
+                effectsizelevel = []
+                for i in range(0, len(d1), r):
+                    data1 = df.iloc[i:i + r, -2].astype(float)  # keep float data
+                    data2 = df.iloc[i:i + r, j].astype(float)  # keep float data
+
+                    stas, p = Wilcoxon_signed_rank_test(data1, data2)
+                    d, esl = Cohens_d(data1, data2)
+                    pvalues.append(p)
+                    dvalues.append(d)
+                    effectsizelevel.append(esl)
+                values = np.array([pvalues, dvalues, effectsizelevel]).T
+
+                wintieloss.append(wtl)
+                columns = [df.columns.values[j] + '_p',
+                           df.columns.values[j] + "_d", df.columns.values[j] + "_esl"]
+                df_stas = pd.DataFrame(values, columns=columns)
+
+                df_stas_all = pd.concat([df_stas_all, df_stas], axis=1)
+
+            df_stas_all.to_csv(spath + '\\' + 'stas_' + filestring + '.csv')
+
+            # print(columns_wtl)
+            df_wtl = pd.DataFrame(np.array(wintieloss), index=columns_wtl).T
+
+            df_wtl.to_csv(spath + '\\' + 'wtl_' + filestring + '.csv')
+
+
+def P_D_ESL_WTL(fpath, spath, filestring, r):
+    '''
+    specially for RQ1
+    :param fpath:
+    :param spath:
+    :param filestring:
+    :return:
+    '''
+    if not os.path.exists(spath):
+            os.mkdir(spath)
+    filelist = os.listdir(fpath)
+    for file in filelist:
+        if filestring in file:
+            df0 = pd.read_csv(fpath + '\\' + file)
+            method = df0.iloc[-1, :].values
+            # method = np.delete(method, 0)
+            # print(method)
+            df = pd.read_csv(fpath + '\\' + file)
+            df.columns = method
+            df.drop(columns=['method'], inplace=True)
+            # print(df.index, df.columns)
+            # df = df.astype(float)
+            # df.set_index(df, inplace=True)
+            d1 = df.iloc[:-1, -2].astype(float)   # WiFFd
+
+            wintieloss = []
+            df_stas_all = pd.DataFrame()
+            columns_wtl = []
+            for j in range(0, len(df.columns.values)-2, 1):
+                if 'CPDP_SMOTE_iFl_d' not in df.columns.values[j]: # CPDP_SMOTE_iFl_d_LR':
+                    d2 = df.iloc[:-1, j].astype(float)  # keep float data
+                    # print(d2.head(3))
+                    wtl = WinTieLoss(d1, d2, alpha=0.05, r=30)
+                    columns_wtl.append(df.columns.values[j])
+                    pvalues = []
+                    dvalues = []
+                    effectsizelevel = []
+                    for i in range(0, len(d1), r):
+                        data1 = df.iloc[i:i + r, -2].astype(float)  # keep float data
+                        data2 = df.iloc[i:i + r, j].astype(float)  # keep float data
+
+                        stas, p = Wilcoxon_signed_rank_test(data1, data2)
+                        d, esl = Cohens_d(data1, data2)
+                        pvalues.append(p)
+                        dvalues.append(d)
+                        effectsizelevel.append(esl)
+                    values = np.array([pvalues, dvalues, effectsizelevel]).T
+
+                    wintieloss.append(wtl)
+                    columns = [df.columns.values[j] + '_p',
+                               df.columns.values[j] + "_d", df.columns.values[j] + "_esl"]
+                    df_stas = pd.DataFrame(values, columns=columns)
+
+                    df_stas_all = pd.concat([df_stas_all, df_stas], axis=1)
+
+
+
+            df_stas_all.to_csv(spath + '\\' + 'stas_' + filestring + '.csv')
+
+            # print(columns_wtl)
+            df_wtl = pd.DataFrame(np.array(wintieloss), index=columns_wtl).T
+
+            df_wtl.to_csv(spath + '\\' + 'wtl_' + filestring+ '.csv')
 
 if __name__ == "__main__":
     print('以下为程序打印所有内容：')
@@ -299,33 +555,40 @@ if __name__ == "__main__":
     # d2 = Example_Cohens_d(data1, data3)
     # print(d, d1, d2)
 
-    # test StatTest
-    # fp = r'D:\PycharmProjects\cuican\data2020\ACR\AEEEM\concact_M2O'
-    # sp = r'D:\PycharmProjects\cuican\data2020\ACR\AEEEM'
-    # StatTest(fp, sp)
+    #################for CK-M2O RQ1 #################
+    pwd = os.getcwd()
+    father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + ".")
+    spath_e = father_path + '/results/'
+    spathe_mean = father_path + '/results/mean'
+    if not os.path.exists(spathe_mean):
+        os.mkdir(spathe_mean)
+    fl = os.listdir(spath_e)
+    # print(fl)
+    string = 'testfile'
+    for folder in fl:
+        fpath = spath_e + '\\' + folder
+        print(fpath)
+        Average_Measures(fpath, spathe_mean, string)
 
+    # spath_concat =  father_path + '/results/M2O_concat'
+    # filestrings = ['RF_mean', 'LR_mean', 'LR_std', 'RF_std', 'LR_median', 'RF_median']
+    # for filestring in filestrings:
+    #     measurestring =['Balance', 'G-Measure', 'G-Mean2']
+    #     Concat_Average_Measures(spathe_mean, spath_concat, filestring, measurestring, name='measures')
 
-    # fps = [r'D:\PycharmProjects\cuican\data2020\ACR\AEEEM\concact_M2O',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\AEEEM\concact_O2O',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\Relink\concact_M2O',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\Relink\concact_O2O',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\CK\concact_M2O',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\CK\concact_O2O',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\CK2\concact_M2O',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\CK2\concact_O2O']
-    #
-    # sps = [r'D:\PycharmProjects\cuican\data2020\ACR\AEEEM',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\AEEEM',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\Relink',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\Relink',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\CK',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\CK',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\CK2',
-    #        r'D:\PycharmProjects\cuican\data2020\ACR\CK2']
-    # for i in range(len(fps)):
+    # filestrings = ['RF.csv', 'LR.csv']
+    # for filestring in filestrings:
+    #     measurestrings = [['Balance'], ['G-Measure'], ['G-Mean2']]
+    #     for measurestring in measurestrings:
+    #         name = measurestring[0]
+    #         Concat_Average_Measures(spathe_mean, spath_concat, filestring, measurestring, name)
+
+    # spath_stats = father_path +'/M2O_stats'
+    # # filestring = 'LR.csv_Balance'
+    # filestrings = ['LR.csv_Balance', 'LR.csv_G-Measure', 'LR.csv_G-Mean2',
+    #                'RF.csv_Balance', 'RF.csv_G-Measure', 'RF.csv_G-Mean2']
+    # for filestring in filestrings:
+    #     P_D_ESL_WTL(spath_concat, spath_stats, filestring, r=30)
+
     #     StatTest(fps[i], sps[i])
-
-    StatTest(r'D:\PycharmProjects\cuican\data2020\ACR\CK_RQ1\concact_O2O',
-             r'D:\PycharmProjects\cuican\data2020\ACR\CK_RQ1')
-
 

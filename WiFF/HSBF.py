@@ -42,7 +42,7 @@ from datatransformation import DataCharacteristic, DataFrame2Array
 from KMeansFilter import KMeansFilter
 from DataProcessing import DataFrame2Array, DataImbalance, Delete_abnormal_samples, \
      DevideData2TwoClasses, Drop_Duplicate_Samples, indexofMinMore, indexofMinOne, NumericStringLabel2BinaryLabel, \
-     Process_Data, Random_Stratified_Sample_fraction, Log_transformation
+     Random_Stratified_Sample_fraction, Log_transformation  # Process_Data,
 
 from ClassificationModel import Selection_Classifications, Build_Evaluation_Classification_Model
 
@@ -202,19 +202,20 @@ def HSBF_main(mode, clf_index, runtimes):
                     # Samples_tr_all.to_csv(f2, index=None, columns=None)  # 将类标签二元化的数据保存，保留列名，不增加行索引
 
                     # random sample 90% negative samples and 90% positive samples
-                    string = 'bug'
-                    Sample_tr_pos, Sample_tr_neg, Sample_pos_index, Sample_neg_index \
-                        = Random_Stratified_Sample_fraction(Samples_tr_all, string, r=r)
-                    Sample_tr = np.concatenate((Sample_tr_neg, Sample_tr_pos), axis=0)  # array垂直拼接
-                    data_train_unique = Drop_Duplicate_Samples(pd.DataFrame(Sample_tr))  # drop duplicate samples
-                    source = data_train_unique.values
-                    target = np.c_[X_test, y_test]
+                    # string = 'bug'
+                    # Sample_tr_pos, Sample_tr_neg, Sample_pos_index, Sample_neg_index \
+                    #     = Random_Stratified_Sample_fraction(Samples_tr_all, string, r=r)
+                    # Sample_tr = np.concatenate((Sample_tr_neg, Sample_tr_pos), axis=0)  # array垂直拼接
+                    # data_train_unique = Drop_Duplicate_Samples(pd.DataFrame(Sample_tr))  # drop duplicate samples
+                    # source = data_train_unique.values
+                    # target = np.c_[X_test, y_test]
 
                     # *******************HSBF*********************************
                     method_name = mode[1] + '_' + mode[2]  # scenario + filter method
                     print('----------%s:%d/%d------' % (method_name, r + 1, runtimes))
                     df_filter_time, X_train_new, y_train_new, = HSBF(trfilelist, Address_te, k1=10, k2=20, r=r)
                     y_train_new = preprocessing.Binarizer(threshold=0).transform(y_train_new.reshape(-1, 1))  #
+
                     # Train model: classifier / model requires the label must beong to {0, 1}.
                     modelname_hsbf, model_hsbf = Selection_Classifications(clf_index, r)  # select classifier
                     classifiername.append(modelname_hsbf)
@@ -224,7 +225,7 @@ def HSBF_main(mode, clf_index, runtimes):
                     end_time = time.time()
                     run_time = end_time - start_time
                     measures_hsbf.update(
-                        {'train_len_before': len(Sample_tr), 'train_len_after': len(Sample_tr), 'test_len': len(target),
+                        {'train_len_before': len(Samples_tr_all), 'train_len_after': len(X_train_new), 'test_len': len(X_test),
                          'runtime': run_time, 'clfindex': clf_index, 'clfname': modelname_hsbf,
                          'testfile': file_te, 'trainfile': 'More1', 'runtimes': r + 1})
                     df_m2ocp_measures = pd.DataFrame(measures_hsbf, index=[r])
@@ -252,7 +253,7 @@ def HSBF_main(mode, clf_index, runtimes):
 if __name__ == '__main__':
 
 
-    mode = [[1, 1, 0, 'Weight_iForest', 'zscore', 'smote'], 'M2O_CPDP', 'eg_HSBF']
+    mode = ['', 'M2O_CPDP', 'eg_HSBF']
     foldername = mode[1] + '_' + mode[2]
 
     HSBF_main(mode=mode, clf_index=0, runtimes=2)

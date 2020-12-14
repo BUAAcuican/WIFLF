@@ -33,14 +33,13 @@ from typing import Iterable
 import pandas as pd
 import numpy as np
 import operator
-from sklearn.cluster import KMeans, DBSCAN, MiniBatchKMeans, AgglomerativeClustering
-
-from DataProcessing import DataFrame2Array, DataImbalance, Delete_abnormal_samples, \
-     DevideData2TwoClasses, Drop_Duplicate_Samples, indexofMinMore, indexofMinOne, NumericStringLabel2BinaryLabel, \
-     Process_Data, Random_Stratified_Sample_fraction, Log_transformation
+from sklearn.cluster import AgglomerativeClustering
 
 from ClassificationModel import Selection_Classifications, Build_Evaluation_Classification_Model
 
+from DataProcessing import Check_NANvalues, DataFrame2Array, DataImbalance, Delete_abnormal_samples, \
+     DevideData2TwoClasses, Drop_Duplicate_Samples, indexofMinMore, indexofMinOne, NumericStringLabel2BinaryLabel, \
+     Random_Stratified_Sample_fraction, Standard_Features # Process_Data,
 
 def DFAC(X_tr, y_tr, X_te, y_te):
     '''
@@ -178,33 +177,38 @@ def DFAC_main(mode, clf_index, runtimes):
                                                        sort=False)
                     # Samples_tr_all.to_csv(f2, index=None, columns=None)  # 将类标签二元化的数据保存，保留列名，不增加行索引
 
-                    # random sample 90% negative samples and 90% positive samples
-                    string = 'bug'
+                    # /* step1: data preprocessing */
                     Sample_tr_pos, Sample_tr_neg, Sample_pos_index, Sample_neg_index \
-                        = Random_Stratified_Sample_fraction(Samples_tr_all, string, r=r)
+                                = Random_Stratified_Sample_fraction(Samples_tr_all, string='bug', r=r)  # random sample 90% negative samples and 90% positive samples
                     Sample_tr = np.concatenate((Sample_tr_neg, Sample_tr_pos), axis=0)  # array垂直拼接
-                    data_train_unique = Drop_Duplicate_Samples(pd.DataFrame(Sample_tr))  # drop duplicate samples
-                    source = data_train_unique.values
-                    target = np.c_[X_test, y_test]
+                    data_train = pd.DataFrame(Sample_tr)
+                    data_train_unique = Drop_Duplicate_Samples(data_train)  # drop duplicate samples
+                    data_train_unique = data_train_unique.values
+                    X_train = data_train_unique[:, : -1]
+                    y_train = data_train_unique[:, -1]
+                    X_train_zscore, X_test_zscore = Standard_Features(X_train, 'zscore', X_test)  # data transformation
+                    target = np.c_[X_test_zscore, y_test]
+
 
                     # *******************DFAC*********************************
                     method_name = mode[1] + '_' + mode[2]  # scenario + filter method
                     print('----------%s:%d/%d------' % (method_name, r + 1, runtimes))
-                    X_train = source[:, :-1]
-                    y_train = source[:, -1]
+
                     # only NB classifier
                     # X_train = Log_transformation(X_train)
                     # X_test = Log_transformation(X_test)
-                    df_filter_time, X_train_new, y_train_new = DFAC(X_train, y_train, X_test, y_test)
+                    df_filter_time, X_train_new, y_train_new = DFAC(X_train_zscore, y_train, X_test_zscore, y_test)
+
+
                     # Train model: classifier / model requires the label must beong to {0, 1}.
                     modelname_dfac, model_dfac = Selection_Classifications(clf_index, r)  # select classifier
                     classifiername.append(modelname_dfac)
                     # print("modelname_dfac:", modelname_dfac)
-                    measures_dfac = Build_Evaluation_Classification_Model(model_dfac, X_train_new, y_train_new, X_test, y_test)  # build and evaluate models
+                    measures_dfac = Build_Evaluation_Classification_Model(model_dfac, X_train_new, y_train_new, X_test_zscore, y_test)  # build and evaluate models
                     end_time = time.time()
                     run_time = end_time - start_time
                     measures_dfac.update(
-                        {'train_len_before': len(Sample_tr), 'train_len_after': len(Sample_tr), 'test_len': len(target),
+                        {'train_len_before': len(X_train), 'train_len_after': len(X_train_new), 'test_len': len(X_test),
                          'runtime': run_time, 'clfindex': clf_index, 'clfname': modelname_dfac,
                          'testfile': file_te, 'trainfile': 'More1', 'runtimes': r + 1})
                     df_m2ocp_measures = pd.DataFrame(measures_dfac, index=[r])
@@ -238,6 +242,6 @@ if __name__ == '__main__':
     # x = Log_transformation(X)
     # print(x)
 
-    mode = [[1, 1, 0, 'Weight_iForest', 'zscore', 'smote'], 'M2O_CPDP', 'eg_DFAC']
+    mode = ['', 'M2O_CPDP', 'eg_DFAC']
     foldername = mode[1] + '_' + mode[2]
     DFAC_main(mode=mode, clf_index=0, runtimes=2)
