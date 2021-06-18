@@ -42,7 +42,7 @@ from sklearn import preprocessing, linear_model, naive_bayes, tree, neighbors, e
 # MinMaxScaler, StandardScaler, Binarizer, Imputer, LabelBinarizer, FunctionTransformer,model_selection, metrics,\
 from imblearn.over_sampling import SMOTE, RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
-# from WiFF import IForest
+# from WIFLF import IForest
 # from BF import BurakFilter
 from scipy.spatial.distance import pdist, squareform, mahalanobis
 # from __future__ import division

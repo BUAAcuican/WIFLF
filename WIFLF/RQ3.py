@@ -176,7 +176,7 @@ def AdjustParametersofWIFLF():
         for k in numtrees:
             for i in alphas:
                 iForest_parameters = [k, j, 255, 'rate', 0.5, i]  # default values of iForest
-                # iForest_parameters = [100, 256, 255, 'rate', 0.5, 0.6]  # acceptable values of WiFF
+                # iForest_parameters = [100, 256, 255, 'rate', 0.5, 0.6]  # acceptable values of WIFLF
                 runtimes = 30
                 mode8 = [iForest_parameters, 'M2O_CPDP', 'WIFLF_params']
                 df_measures = WeightedIsolationForestwithLabelinformationFilter(mode=mode8, clf_index=2, runtimes=runtimes)
