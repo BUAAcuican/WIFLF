@@ -27,23 +27,16 @@ from functools import partial
 from collections import Counter
 from sklearn import preprocessing, model_selection, metrics,\
     linear_model, naive_bayes, tree, neighbors, ensemble, svm, neural_network
-
 from DataProcessing import Check_NANvalues, DataFrame2Array, DataImbalance, Delete_abnormal_samples, \
      DevideData2TwoClasses, Drop_Duplicate_Samples, indexofMinMore, indexofMinOne, NumericStringLabel2BinaryLabel, \
      Random_Stratified_Sample_fraction, Standard_Features  # Process_Data,
 from Performance import performance
-
-# from TNB import TNB
-# from TCAPlus import TCAplus
-
-
-
+from TNB import TNB
+from TCAPlus import TCAplus
 
 # Given N data sets, we find which one produces the best predicions on all the others
-
 # This “bellwether” data set is then used for all subsequent predictions (or, until such time as its predictions
 # start failing- at which point it is wise to seek another bellwether.
-
 
 def weight_training(training_instance, test_instance):
     """
@@ -100,12 +93,15 @@ def SMOTE_Data(df_data, r):
     # print(Counter(y), nondefct_num, defect_num)
     if nondefct_num >= np.sum(y) and defect_num > np.sum(y):
         # SMOTE: 对于少数类样本a, 随机选择一个最近邻的样本b, 然后从a与b的连线上随机选取一个点c作为新的少数类样本
-        X_resampled_smote, y_resampled_smote = SMOTE(random_state=r + 1, ratio={1: int(defect_num)}).fit_sample(X, y)
+        # X_resampled_smote, y_resampled_smote = SMOTE(random_state=r + 1, ratio={1: int(defect_num)}).fit_sample(X, y)
+        X_resampled_smote, y_resampled_smote = SMOTE(random_state=r + 1).fit_sample(X, y)
         y_smote = sorted(Counter(y_resampled_smote).items())
         # print(y_smote)
         return X_resampled_smote, y_resampled_smote
     else:
-        X_resampled_rus, y_resampled_rus = RandomUnderSampler(ratio={1: int(defect_num)}).fit_sample(X, y)
+        # X_resampled_rus, y_resampled_rus = RandomUnderSampler(ratio={1: int(defect_num)}).fit_sample(X, y)
+        X_resampled_rus, y_resampled_rus = RandomUnderSampler().fit_sample(X, y)
+
         y_rus = sorted(Counter(y_resampled_rus).items())
         # print(y_rus)
         return X_resampled_rus, y_resampled_rus

@@ -3,12 +3,17 @@
 
 """
 ============================================================================
-WeightedIsolationForestwithLabelinformationFilter()
-Main(): WIFLF on PROMISE1, PROMISE2, AEEEM, RELINK
+Answering RQ3 for Paper: How does the parameters affect on WIFLF?
+
+@alpha: [0, 0.1, 0.2, 0.3, 0.4, 0.5]
+@phi: [16, 32, 64, 128, 256, 512]
+@t: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120]
+
+`Weighted Isolation Forest with Label Information Filter for Cross-Project Defect Prediction with Common Metrics`
 ============================================================================
 @author: Can Cui
 @E-mail: cuican1414@buaa.edu.cn/cuican5100923@163.com/cuic666@gmail.com
-@2021/03/14
+@2021/4/9
 ============================================================================
 """
 # print(__doc__)
@@ -16,7 +21,6 @@ from __future__ import print_function
 
 import pandas as pd
 import numpy as np
-
 import time
 import os
 
@@ -26,6 +30,7 @@ from ClassificationModel import Selection_Classifications, Build_Evaluation_Clas
 from DataProcessing import Check_NANvalues, DataFrame2Array, DataImbalance, Delete_abnormal_samples, \
      DevideData2TwoClasses, Drop_Duplicate_Samples, indexofMinMore, indexofMinOne, NumericStringLabel2BinaryLabel, \
      Random_Stratified_Sample_fraction, Standard_Features # Process_Data,
+
 
 def WeightedIsolationForestwithLabelinformationFilter(mode, clf_index, runtimes):
     pwd = os.getcwd()
@@ -41,11 +46,8 @@ def WeightedIsolationForestwithLabelinformationFilter(mode, clf_index, runtimes)
     # datasets = [['ant-1.3.csv', 'arc-1.csv', 'camel-1.0.csv'], ['Apache.csv', 'Safe.csv', 'Zxing.csv']]
     # datasets = [['Apache.csv', 'Safe.csv', 'Zxing.csv']]
 
-    # datasets for RQ2
-    datasets = [['ant-1.3.csv', 'arc-1.csv', 'camel-1.0.csv', 'ivy-1.4.csv', 'jedit-3.2.csv', 'log4j-1.0.csv', 'lucene-2.0.csv', 'poi-2.0.csv', 'redaktor-1.csv', 'synapse-1.0.csv', 'tomcat-6.0.389418.csv', 'velocity-1.6.csv', 'xalan-2.4.csv', 'xerces-init.csv'],
-                ['ant-1.7.csv', 'arc-1.csv', 'camel-1.6.csv', 'ivy-2.0.csv', 'jedit-4.3.csv', 'log4j-1.1.csv', 'lucene-2.0.csv', 'poi-2.0.csv', 'redaktor-1.csv', 'synapse-1.2.csv', 'tomcat-6.0.389418.csv', 'velocity-1.6.csv', 'xalan-2.6.csv', 'xerces-1.3.csv'],
-                ['EQ.csv', 'JDT.csv', 'LC.csv', 'ML.csv', 'PDE.csv'],
-                ['Apache.csv', 'Safe.csv', 'Zxing.csv']]
+    # datasets for RQ3
+    datasets = [['arc-1.csv', 'log4j-1.0.csv', 'lucene-2.0.csv', 'synapse-1.0.csv', 'tomcat-6.0.389418.csv']]
 
     datanum = 0
     for i in range(len(datasets)):
@@ -151,14 +153,45 @@ def WeightedIsolationForestwithLabelinformationFilter(mode, clf_index, runtimes)
     # print('df_file_measures:\n', df_file_measures)
     return df_file_measures
 
-def Main(runtimes):
+def AdjustParametersofWIFLF():
+    pwd = os.getcwd()
+    # print(pwd)
+    father_path = os.path.abspath(os.path.dirname(pwd) + os.path.sep + ".")
+    # print(father_path)
+    # datapath = father_path + '/dataset-inOne/'
+    spath = father_path + '/paramResults/'
+    if not os.path.exists(spath):
+        os.mkdir(spath)
 
-    iForest_parameters = [10, 16, 255, 'rate', 0.5, 0.5]
-    mode = [iForest_parameters, 'M2O_CPDP', 'WIFLF']
+    alphas = [0.1, 0.2, 0.3, 0.4, 0.5]
+    subsamplesizes = [16, 32, 64, 128, 256, 512]
+    numtrees = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120]
 
-    for i in range(0, 3, 1):
-        WeightedIsolationForestwithLabelinformationFilter(mode=mode, clf_index=i, runtimes=runtimes)
+    alpha = []
+    subsamplesize = []
+    numtree = []
+    mean_all = pd.DataFrame()
 
+    for j in subsamplesizes:
+        for k in numtrees:
+            for i in alphas:
+                iForest_parameters = [k, j, 255, 'rate', 0.5, i]  # default values of iForest
+                # iForest_parameters = [100, 256, 255, 'rate', 0.5, 0.6]  # acceptable values of WiFF
+                runtimes = 30
+                mode8 = [iForest_parameters, 'M2O_CPDP', 'WIFLF_params']
+                df_measures = WeightedIsolationForestwithLabelinformationFilter(mode=mode8, clf_index=2, runtimes=runtimes)
+
+
+                values = df_measures.iloc[:, 1:23]
+                mean = pd.DataFrame(values.mean())
+                mean_all = pd.concat([mean_all, mean.T])
+                alpha.append(i)
+                numtree.append(k)
+                subsamplesize.append(j)
+    mean_all['alpha'] = alpha
+    mean_all['numtree'] = numtree
+    mean_all['subsamplesize'] = subsamplesize
+    mean_all.to_csv(spath + 'WIFLF_params.csv')
 
 if __name__ == '__main__':
     print('以下为程序打印所有内容：')
@@ -166,13 +199,11 @@ if __name__ == '__main__':
 
     starttime = time.clock()  # 计时开始
 
-    Main(runtimes=30)
+    AdjustParametersofWIFLF()
 
     endtime = time.clock()  # 计时结束
 
     totaltime = endtime - starttime
     print('程序结束运行时间', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
     print('程序共运行时间为:', totaltime)
-
-
 

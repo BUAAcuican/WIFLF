@@ -208,9 +208,9 @@ if __name__ == '__main__':
     # performance(y_true5, prob_pos6)  # 仅TP=0,TN=0
     performance(y_true5, prob_pos7)  # 仅FN=0,TN=0
 
-    # performance(y_true2, prob_pos1)  # SKEWD-F1 =nan, AUC error
+    # performance(y_true2, prob_pos1)  # SKEWD-F1 = nan, AUC error
     # performance(y_true2, prob_pos2)  # SKEWD-F1 and  AUC error
-    # performance(y_true2, prob_pos3)  # SKEWD-F1 =nan, AUC error
+    # performance(y_true2, prob_pos3)  # SKEWD-F1 = nan, AUC error
 
 
     # performance(y_true3, prob_pos1)

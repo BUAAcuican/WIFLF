@@ -1,18 +1,22 @@
-# Weighted-iForest-Filter-main
-Source code and all the datasets used in the paper "WIFF: Weighted Isolation Forest Filter for Instance-based Cross-Project Defect Prediction".
+# WiFLF-main
+Source code and all the datasets used in the paper "Weighted Isolation Forest with Label Information Filter for Cross-Project Defect Prediction with Common Metrics".
 
-## There are the following three main subfolders in Weighted-iForest-Filter-main
-- Datasets -- This folder includes two subfolders (AEEEM,PROMISE1, PROMISE2 and Relink), each subfolder contains the corresponding datasets used in the paper. Each dataste is a csv file.
+## There are the following three main subfolders in WiFLF-main
+- Datasets -- This folder includes two subfolders (AEEEM,PROMISE1, PROMISE2 and Relink), each subfolder contains the corresponding datasets used in the paper. Each dataset is a csv file.
 - Datasets-inOne -- All the datasets are put in one folder.
-- WiFF -- This folder includes the source code of WiFF.
+- results -- the results of RQ1, RQ2 & RQ3.
 
-## Usage of WiFF
-- Step1: Download Weighted-iForest-Filter-main;
-- Step2: Open Pycharm and add the path of Weighted-iForest-Filter-main and its subfolders;
+- WIFLF -- This folder includes the source code of WIFLF and the baselines.  
+## Usage of WIFLF
+- Step1: Download WiFLF-main;
+- Step2: Open Pycharm and add the path of WiFLF-main and its subfolders;
 - Step3: Configure your Pycharm and ensure the Python can be called to implement the funcitions. 
          Python supports version 3.6.5; 
-- Step4: Visit the WiFF folder and open the script main.py for RQ2 (RQ1.py for RQ1 or Discussion.py for Discussion) with your Python;
-- Step5: Click the run button in the manu of Pycharm Editor to run main.py; 
+- Step4: Visit the WiFLF folder and open the script main.py for WIFLF with your Python; 
+         (RQ1.py for the baselines of RQ1;
+         RQ2.py for the baselines of RQ2;
+         RQ3.py or RQ3) ;
+- Step5: Click the run button in the menu of Pycharm Editor to run main.py; 
 
 
 

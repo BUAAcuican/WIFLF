@@ -76,7 +76,8 @@ def Build_Evaluation_Classification_Model(classifier, X_train, y_train, X_test, 
     :param y_test:
     :return: measures: type: dict
     '''
-
+    # print("X_train, y_train", X_train, y_train, type(X_train), type(y_train))
+    # print(classifier, type(classifier))
     classifier.fit(X_train, y_train)
     # y_te_prepredict = classifier.predict(X_test)  # predict labels
     y_te_predict_proba = classifier.predict_proba(X_test)  # predict probability
