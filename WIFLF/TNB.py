@@ -164,7 +164,7 @@ def fayyadIrani(points, classes, intervals=40):
             # descend .recursively  #
             #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #
             if gain >= right_side:
-                # FIXME intervals is hard - coded to 25. 
+                # FIXME intervals is hard - coded to 25.
                 intervals = 25
                 bw = bin_walls[lsp]
                 walls.append(bw)
