@@ -14,7 +14,10 @@ Answering RQ2 for Paper: Is WIFLF better than other CPDP-CM methods?
     7)HSBF:
     8)TCAplus:2013
     9)TNB:Transfer Naive Bayes, 2012
-`Weighted Isolation Forest with Label Information Filter for Cross-Project Defect Prediction with Common Metrics`
+   10)EASC, 2020
+   11)CFPS, 2021
+   12)DMDA_JFR, 2021
+`WIFLF: An Approach Independing The Target Project for Cross-Project Defect Prediction`
 ============================================================================
 @author: Can Cui
 @E-mail: cuican1414@buaa.edu.cn/cuican5100923@163.com/cuic666@gmail.com
@@ -39,6 +42,9 @@ from HISNN import HISNN_main
 from DFAC import DFAC_main
 from HSBF import HSBF_main
 from Bellwether import Bellwether_main
+from EASC import EASC_main
+from DMDA_JFR import DMDA_JFR_main
+from CFPS import CFPS_main
 
 
 import multiprocessing
@@ -108,26 +114,46 @@ def main_BellwetherTNB(runtimes):
     for i in range(0, 3, 1):
         Bellwether_main(learnername=learnername, mode=mode, clf_index=i, runtimes=runtimes)
 
+def main_CFPS(runtimes):
+    mode = ['null', 'M2O_CPDP', 'CFPS']
+    for i in range(0, 3, 1):
+        CFPS_main(mode=mode, clf_index=i, runtimes=runtimes, learnerIndex=1, measureString='F1')
+
+def main_DMDA_JFR(runtimes):
+    mode = ['null', 'M2O_CPDP', 'DMDA_JFR']
+    for i in range(0, 3, 1):
+        DMDA_JFR_main(mode, clf_index=i, runtimes=runtimes)
+
+def main_EASC(runtimes):
+    mode = ['', 'M2O_CPDP', 'EASC']
+    # foldername = mode[1] + '_' + mode[2]
+    for i in range(0, 3,  1):
+        EASC_main(mode=mode, clf_index=i, runtimes=runtimes)
+
 def somefunc( iterable_term):
 
     runtimes = 30
     if iterable_term == 1:
         return main_BF(runtimes)
     elif iterable_term == 2:
+         # return main_BellwetherTCAplus(runtimes)
         return main_TNB(runtimes)
     elif iterable_term == 3:
-        a = main_NaiveBellwether(runtimes)
-        # return main_BellwetherTCAplus(runtimes)
-        return main_TCAplus(runtimes)
+        return main_NaiveBellwether(runtimes)
+       # return main_BellwetherTNB(runtimes)       
     elif iterable_term == 4:
-        return main_HISNN(runtimes)
+        return main_HISNN(runtimes)        
     elif iterable_term == 5:
+        # return main_TCAplus(runtimes)
         return main_DFAC(runtimes)
     elif iterable_term == 6:
-        return main_HSBF(runtimes)
+        # return main_HSBF(runtimes)
+        return main_EASC(runtimes)
     elif iterable_term == 7:
-        return main_BellwetherTNB(runtimes)
-
+        return main_CFPS(runtimes)
+     elif iterable_term == 8:
+        return main_DMDA_JFR(runtimes)
+        
 
 
 
