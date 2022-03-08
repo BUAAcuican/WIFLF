@@ -3,11 +3,11 @@
 
 """
 ============================================================================
-Answering RQ4 for Paper: How would this 90% affect the performance of WIFLF?
+Answering RQ4 for Paper: How do different percentages of source instances affect the performance of WIFLF?
 
 @sp: [1, 0.9, 0.8, 0.7, 0.6, 0.5]
 
-`Weighted Isolation Forest with Label Information Filter for Cross-Project Defect Prediction with Common Metrics`
+`WIFLF: An Approach Independing The Target Project for Cross-Project Defect Prediction`
 ============================================================================
 @author: Can Cui
 @E-mail: cuican1414@buaa.edu.cn/cuican5100923@163.com/cuic666@gmail.com
@@ -40,15 +40,8 @@ def WeightedIsolationForestwithLabelinformationFilter(mode, clf_index, sp, runti
     if not os.path.exists(spath):
         os.mkdir(spath)
 
-    # example datasets for test
-    # datasets = [['ant-1.3.csv', 'arc-1.csv', 'camel-1.0.csv'], ['Apache.csv', 'Safe.csv', 'Zxing.csv']]
-    # datasets = [['Apache.csv', 'Safe.csv', 'Zxing.csv']]
-
     # datasets for RQ4
-    datasets = [['ant-1.7.csv', 'arc-1.csv', 'camel-1.6.csv', 'ivy-2.0.csv', 'jedit-4.3.csv', 'log4j-1.1.csv',
-                 'lucene-2.0.csv', 'poi-2.0.csv', 'redaktor-1.csv', 'synapse-1.2.csv', 'tomcat-6.0.389418.csv',
-                 'velocity-1.6.csv', 'xalan-2.6.csv', 'xerces-1.3.csv']]
-    # datasets = [['arc-1.csv', 'log4j-1.0.csv', 'lucene-2.0.csv', 'synapse-1.0.csv', 'tomcat-6.0.389418.csv']]
+    datasets = [['arc-1.csv', 'log4j-1.0.csv', 'lucene-2.0.csv', 'synapse-1.0.csv', 'tomcat-6.0.389418.csv']]
 
     datanum = 0
     for i in range(len(datasets)):
@@ -164,14 +157,14 @@ def AdjustSamplePercentofWIFLF():
     if not os.path.exists(spath):
         os.mkdir(spath)
 
-    # sp = [1, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.6, 0.5]
+   
     sp = [0.5, 0.6, 0.7, 0.8, 0.9, 1]
     mean_all = pd.DataFrame()
     for j in sp:
-        # iForest_parameters = [100, 256, 255, 'rate', 0.5, 0.6]  # acceptable values of WiFF
+        # set iForest parameters 
         iForest_parameters = [10, 16, 255, 'rate', 0.5, 0.5]
         runtimes = 30
-        mode8 = [iForest_parameters, 'M2O_CPDP', 'WIFLF_sp_promise']
+        mode8 = [iForest_parameters, 'M2O_CPDP', 'WIFLF_sp']
         df_measures = WeightedIsolationForestwithLabelinformationFilter(mode=mode8, clf_index=2, sp=j, runtimes=runtimes)
 
 
@@ -179,7 +172,7 @@ def AdjustSamplePercentofWIFLF():
         mean = pd.DataFrame(values.mean())
         mean_all = pd.concat([mean_all, mean.T])
 
-    mean_all.to_csv(spath + 'WIFLF_sp_promise.csv')
+    mean_all.to_csv(spath + 'WIFLF_sp.csv')
 
 if __name__ == '__main__':
     print('以下为程序打印所有内容：')
