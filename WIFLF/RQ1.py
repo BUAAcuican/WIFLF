@@ -9,10 +9,10 @@ Answering RQ1 for Paper: Does WIFLF work?
     ZscoreMethod(ZM): Zscore Method  for M2O-CPDP, and the method contains the data preprocessing step;
     ZscoreSMOTEMethod(ZSM): Zscore SMOTE Method for M2O-CPDP, and the approach includes data preprocessing and SMOTE;
     IsolationForestFilter(IFF): preprocessing + SMOTE + iForest
-    WeightedIsolationForestFilter(WIFF): preprocessing + SMOTE + WIFLF
-    WeightedIsolationForestwithLabelinformationFilter(WIFLF): preprocessing + SMOTE + WIFLF + class information
+    WeightedIsolationForestFilter(WIFF): preprocessing + SMOTE + WIFF
+    WeightedIsolationForestwithLabelinformationFilter(WIFLF): preprocessing + SMOTE + WIFLF + class label information
 
-`Weighted Isolation Forest with Label Information Filter for Cross-Project Defect Prediction with Common Metrics`
+`WIFLF: An Approach Independing The Target Project for Cross-Project Defect Prediction`
 ============================================================================
 @author: Can Cui
 @E-mail: cuican1414@buaa.edu.cn/cuican5100923@163.com/cuic666@gmail.com
