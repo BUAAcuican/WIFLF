@@ -1,5 +1,5 @@
 # WiFLF-main
-Source code and all the datasets used in the paper "Weighted Isolation Forest with Label Information Filter for Cross-Project Defect Prediction with Common Metrics".
+Source code and all the datasets used in the paper "WIFLF: An Approach Independing The Target Project for Cross-Project Defect Prediction".
 
 ## There are the following three main subfolders in WiFLF-main
 - Datasets -- This folder includes two subfolders (AEEEM,PROMISE1, PROMISE2 and Relink), each subfolder contains the corresponding datasets used in the paper. Each dataset is a csv file.
@@ -14,9 +14,9 @@ Source code and all the datasets used in the paper "Weighted Isolation Forest wi
          Python supports version 3.6.5; 
 - Step4: Visit the WiFLF folder and open the script main.py for WIFLF with your Python; 
          (RQ1.py for the baselines of RQ1;
-         RQ2.py for the baselines of RQ2;
-         RQ3.py or RQ3；
-         RQ4.py for RQ4) ;
+          RQ2.py for the baselines of RQ2;
+          RQ3.py or RQ3；
+          RQ4.py for RQ4) ;
 - Step5: Click the run button in the menu of Pycharm Editor to run main.py; 
 
 
