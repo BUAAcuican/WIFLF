@@ -1,1 +1,1 @@
-The results of RQ2, which are also shown in Tables in the paper.
+The data results of all the four research questions, which are also shown in Tables or Figures in the paper.
