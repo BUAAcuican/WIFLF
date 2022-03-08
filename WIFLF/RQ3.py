@@ -9,7 +9,7 @@ Answering RQ3 for Paper: How does the parameters affect on WIFLF?
 @phi: [16, 32, 64, 128, 256, 512]
 @t: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120]
 
-`Weighted Isolation Forest with Label Information Filter for Cross-Project Defect Prediction with Common Metrics`
+`WIFLF: An Approach Independing The Target Project for Cross-Project Defect Prediction`
 ============================================================================
 @author: Can Cui
 @E-mail: cuican1414@buaa.edu.cn/cuican5100923@163.com/cuic666@gmail.com
@@ -41,10 +41,6 @@ def WeightedIsolationForestwithLabelinformationFilter(mode, clf_index, runtimes)
     spath = father_path + '/results/'
     if not os.path.exists(spath):
         os.mkdir(spath)
-
-    # example datasets for test
-    # datasets = [['ant-1.3.csv', 'arc-1.csv', 'camel-1.0.csv'], ['Apache.csv', 'Safe.csv', 'Zxing.csv']]
-    # datasets = [['Apache.csv', 'Safe.csv', 'Zxing.csv']]
 
     # datasets for RQ3
     datasets = [['arc-1.csv', 'log4j-1.0.csv', 'lucene-2.0.csv', 'synapse-1.0.csv', 'tomcat-6.0.389418.csv']]
